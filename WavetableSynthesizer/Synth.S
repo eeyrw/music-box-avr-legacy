@@ -47,16 +47,14 @@ WAVETABLE_CELESTA_C5_LEN=2608
 WAVETABLE_CELESTA_C5_LOOP_LEN=(WAVETABLE_CELESTA_C5_LEN - WAVETABLE_CELESTA_C5_ATTACK_LEN)
 
 
-REG_TIM2_CCR2L=0x314+0x5000;
-REG_TIM2_CCR3L=0x316+0x5000;
 
 
-
-
-#define zl r30
-#define zh r31
 #define xl r26
 #define xh r27
+#define yl r28
+#define yh r29
+#define zl r30
+#define zh r31
 #define zero r1
 #define t0l r18
 #define t0h r19
@@ -75,18 +73,6 @@ REG_TIM2_CCR3L=0x316+0x5000;
 
 SynthAsm:
 
-; 	clr a				
-; 	push a			; Keep a loop index in stack
-; 	clrw x
-; 	pushw x				; Keep mixOut result in stack
-; 	; The stack layout is:
-; 	; (0x01,sp)=mixOut
-; 	; (0x03,sp)=loop index
-; 	; (0x04,sp)=PCH
-; 	; (0x05,sp)=PCL
-; 	; (0x06,sp)=synthesizer object's address.
-	
-; 	ldw y,(0x06, sp) 	; Load sound unit pointer to register Y.
 push loopIndex
 push mixOutl
 push mixOuth
@@ -100,17 +86,23 @@ loopSynth:
 	ldd t2l,Z+pEnvelopeLevel ; Load evnvlopelevel to t2l
 	cp t2l,zero
 	breq loopSynthContinue
+	movw t1l,zl
 	ldd zl,Z+pWavetablePos_int_l ; Get a sample by pWavetablePos_int and save to t0l
 	ldd zh,Z+pWavetablePos_int_h
-	ldi t0l,WaveTable_Celesta_C5&0xFF
-	ldi t0h,WaveTable_Celesta_C5>>8
-	add xl,t0l
-	adc xh,t0h
+	ldi t0l,lo8(WaveTable_Celesta_C5)
+	ldi t0h,hi8(WaveTable_Celesta_C5)
+	add zl,t0l
+	adc zh,t0h
 	lpm t0l,Z
+	movw zl,t1l
+	std Z+pSampleVal,t0l
+
 
 	mulsu t0l,t2l ;r1:r0=sample*evnvlopelevel
+	std Z+pVal,r0
+	std Z+(pVal+1),r1
 	add mixOutl,r1
-	adc mixOuth,r1
+	adc mixOuth,zero
 	clr r1 
 
 	ldd t0l,Z+pIncrement_frac
@@ -125,107 +117,60 @@ loopSynth:
 	ldd t0h,Z+pWavetablePos_int_h
 	adc t0h,zero
 
-	cpi t0l,(WAVETABLE_CELESTA_C5_LEN&0xFF)
-	ldi t1l,(WAVETABLE_CELESTA_C5_LEN>>8)
+	cpi t0l,lo8(WAVETABLE_CELESTA_C5_LEN)
+	ldi t1l,hi8(WAVETABLE_CELESTA_C5_LEN)
 	cpc t0h,t1l
 	brlo branch0_end
-	subi t0l,(WAVETABLE_CELESTA_C5_LOOP_LEN&0xFF)
-	ldi t1l,(WAVETABLE_CELESTA_C5_LOOP_LEN>>8)
+	subi t0l,lo8(WAVETABLE_CELESTA_C5_LOOP_LEN)
+	ldi t1l,hi8(WAVETABLE_CELESTA_C5_LOOP_LEN)
 	sbc t0h,t1l
 	branch0_end:
 	std Z+pWavetablePos_int_l,t0l
 	std Z+pWavetablePos_int_h,t0h
-
-
-
-; loopSynth$:
-; 	ld a,(0x03,sp)
-;     cp a,#POLY_NUM
-;     jreq loopSynth_end$
-; ; loop body
-; 		ldw x,y
-; 		ldw x,(pWavetablePos_int_h,x)	; Get a sample by pWavetablePos_int and save to a
-; 		ld a,(_WaveTable_Celesta_C5,x)
-; 		ld (pSampleVal,y),a
-
-; 		ld a,(pEnvelopeLevel,y); Load evnvlopelevel to xl
-; 		ld xl,a
-; 		ld a,(pSampleVal,y)
-
-; 		tnz a				; Test if a<0
-; 		jrmi branch1_end$	; Do signed mutiple with unsigned MUL
-; 		mul x,a
-; 		swapw x				; Div with 0xFF
-; 		ld a,#0
-; 		ld xh,a
-; 		jra branch2_end$	
-; 	branch1_end$:
-; 		neg a				;Do signed mutiple with unsigned MUL
-; 		mul x,a				; Mutiple envelopeLevel with sample
-; 		swapw x				; Div with 0xFF
-; 		ld a,#0
-; 		ld xh,a
-; 		negw x
-; 	branch2_end$:
-
-; 		ldw (pVal,y),x
-
-; 		addw x,(0x01,sp)
-; 		ldw (0x01,sp),x
-
-; 		; Do calculation :[pWavetablePos]+=[pIncrement]
-; 		ld a,(pIncrement_frac,y) ; Get frac part of increment.
-; 		add a,(pWavetablePos_frac,y) ; Add frac part of increment with frac part of wavetablePos.
-; 		ld (pWavetablePos_frac,y),a ; Save frac result to frac part of wavetablePos.
-
-; 		ld a,(pIncrement_int,y) ; Get integer part of increment.
-; 		adc a,(pWavetablePos_int_l,y) ; Add integer part of increment with integer part L of wavetablePos and carrier from frac.
-; 		ld (pWavetablePos_int_l,y),a ; Save integer result to integer part L of wavetablePos.
-; 		ld xl,a		; Let X hold value of integer part of wavetablePos
-
-; 		ld a,(pWavetablePos_int_h,y) ; integer part H of wavetablePos
-; 		adc a,#0 ; integer part H of wavetablePos with carrier from integer part L.
-; 		ld (pWavetablePos_int_h,y),a ; Save integer result  to integer part H of wavetablePos.
-; 		ld xh,a   ; Let X hold value of integer part of wavetablePos
-
-; 	branch0_start$:
-; 		cpw x,#WAVETABLE_CELESTA_C5_LEN 	; Compare x (wavetablePos) with WAVETABLE_CELESTA_C5_LEN C=1 when WAVETABLE_CELESTA_C5_LEN>x
-; 		jrc branch0_end$			; Jump if WAVETABLE_CELESTA_C5_LEN is great than x
-; 		subw x,#WAVETABLE_CELESTA_C5_LOOP_LEN ; Subtract x with WAVETABLE_CELESTA_C5_LOOP_LEN
-; 	branch0_end$:
-; 		ldw (pWavetablePos_int_h,y),x ;
 loopSynthContinue:						
-;     inc (0x03,sp)
-; 	addw y,#SoundUnitSize
-;     jra loopSynth$
-
 inc loopIndex
 ldi t0l,SoundUnitSize
 add zl,t0l
 adc zh,zero
+rjmp loopSynth
 
 loopSynth_end:
 ; 	ldw y,(0x06, sp) 
 ; 	ldw x,(0x01,sp)
 ; 	ldw (pMixOut,y),x
-; 	;sraw x
-; 	cpw x,#253
-; 	jrslt branch_lt_253$
-; 	ldw x,#253
-; branch_lt_253$:
-; 	cpw x,#-255
-; 	jrsgt branch_lt_gt_end$
-; 	ldw x,#-255
-; branch_lt_gt_end$:	
+movw xl,arg0l
+std Z+pMixOut,mixOutl
+std Z+pMixOut+1,mixOuth
 
-; 	sraw x
-; 	ld a,xl
-; 	sub a,#0x80
-; 	ld REG_TIM2_CCR2L,a
-; 	cpl a
-; 	ld REG_TIM2_CCR3L,a	
+asr mixOuth
+ror mixOutl
 
-; 	addw sp,#3
+ldi	t0l, lo8(253)			;Clip it between -255 to 253
+ldi t0h, hi8(253)
+cp mixOutl,t0l
+cpc mixOuth,t0h
+brlt	higherBoundSatisfied			;
+movw	mixOutl, t0l			;
+higherBoundSatisfied:
+ldi	t0l, lo8(-255)			;
+ldi t0h, hi8(-255)
+cp mixOutl,t0l
+cpc mixOuth,t0h	;
+brge	lowerBoundSatisfied			;
+movw	mixOutl, t0l			;/
+lowerBoundSatisfied:
+asr mixOuth ; Set it to PWM modulator ： 把16位的T2带符号位右移一位，除以2，最低位移到Carrier 
+ror mixOutl			
+ror	mixOuth				; 把T2H的高位右移，Carrier进到T2H的第七位
+mov	t0l, mixOutl			; 复制T2L到EL
+subi	t0l, 0x80	; EL=EL-0x80
+mov	t0h, t0l			; 
+com	t0h				; EH取反
+sbrc	mixOuth, 7		; 如果T2H的第七位是0就跳过下面一行
+inc	t0l				; EL++
+sts OCR1AL,t0l
+sts OCR1BL,t0h
+
 pop mixOuth
 pop mixOutl
 pop loopIndex
