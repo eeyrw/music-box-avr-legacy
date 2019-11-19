@@ -79,14 +79,14 @@ push mixOuth
 clr loopIndex
 clr mixOutl
 clr mixOuth
-movw xl,arg0l
+movw zl,arg0l
 loopSynth:
 	cpi loopIndex,POLY_NUM
 	breq loopSynth_end
 	ldd t2l,Z+pEnvelopeLevel ; Load evnvlopelevel to t2l
 	cp t2l,zero
 	breq loopSynthContinue
-	movw t1l,zl
+	movw t1l,zl ; Save reg Z to reg t1 temporarily
 	ldd zl,Z+pWavetablePos_int_l ; Get a sample by pWavetablePos_int and save to t0l
 	ldd zh,Z+pWavetablePos_int_h
 	ldi t0l,lo8(WaveTable_Celesta_C5)
@@ -94,16 +94,16 @@ loopSynth:
 	add zl,t0l
 	adc zh,t0h
 	lpm t0l,Z
-	movw zl,t1l
+	movw zl,t1l ; Restore reg Z with reg t1
 	std Z+pSampleVal,t0l
 
 
 	mulsu t0l,t2l ;r1:r0=sample*evnvlopelevel
 	std Z+pVal,r0
 	std Z+(pVal+1),r1
-	add mixOutl,r1
+	add mixOutl,r1 ; mixOut+=(r1:r0)>>8
 	adc mixOuth,zero
-	clr r1 
+	clr r1 ; Always keep r1=0
 
 	ldd t0l,Z+pIncrement_frac
 	ldd t0h,Z+pWavetablePos_frac 
@@ -138,7 +138,7 @@ loopSynth_end:
 ; 	ldw y,(0x06, sp) 
 ; 	ldw x,(0x01,sp)
 ; 	ldw (pMixOut,y),x
-movw xl,arg0l
+movw zl,arg0l
 std Z+pMixOut,mixOutl
 std Z+pMixOut+1,mixOuth
 
@@ -179,9 +179,14 @@ pop loopIndex
 GenDecayEnvlopeAsm:
 ; 	clr a				; Register A as loop index.
 ; 	ldw y,(0x03, sp) 		; Load sound unit pointer to register Y. (0x03, sp) is synthesizer object's address.
-; loopGenDecayEnvlope$:
+push loopIndex
+clr loopIndex
+movw zl,arg0l
+loopGeDecayEnvlope:
 ;     cp a,#POLY_NUM
 ;     jreq loopGenDecayEnvlope_end$
+	cpi loopIndex,POLY_NUM
+	breq loopGenDecayEnvlope_end
 ; 	push a				; Keep a as temporary variable
 ; 	; loop body
 
@@ -195,7 +200,12 @@ GenDecayEnvlopeAsm:
 ; 	;			soundUnionList[i].combine.envelopePos += 1;
 ; 	;		}
 ; 	;	}
-
+	ldd t0l,Z+pWavetablePos_int_l ; Get a sample by pWavetablePos_int and save to t0l
+	ldd t1l,Z+pWavetablePos_int_h
+	cpi t0l,lo8(WAVETABLE_CELESTA_C5_ATTACK_LEN)
+	ldi t0h,hi8(WAVETABLE_CELESTA_C5_ATTACK_LEN)
+	cpc t0h,t1l
+	brlo envelopUpdateEnd
 ; 	ldw x,y
 ; 	ldw x,(pWavetablePos_int_h,x)
 ; 	cpw x,#WAVETABLE_CELESTA_C5_ATTACK_LEN
@@ -210,14 +220,14 @@ GenDecayEnvlopeAsm:
 ; 	ld (pEnvelopeLevel,y),a
 ; 	inc (pEnvelopePos,y)
 
-; envelopUpdateEnd$:	
+envelopUpdateEnd:	
 						
 ; 	pop a
-;     inc a
+inc loopIndex
 ; 	addw y,#SoundUnitSize
 ;     jra loopGenDecayEnvlope$
-; loopGenDecayEnvlope_end$:
-
+loopGenDecayEnvlope_end:
+pop loopIndex
 ret
 
 NoteOnAsm:
