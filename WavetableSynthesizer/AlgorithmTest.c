@@ -66,7 +66,7 @@ void PrintParameters(Synthesizer *synth)
     printf("%12s", "Chn NoteIncr");
     for (uint8_t k = 0; k < POLY_NUM; k++)
     {
-        printf("%6x ", soundUnionList[k].combine.increment);
+        printf("%6d ", soundUnionList[k].combine.increment);
     }
     printf("\n");
 }
@@ -135,7 +135,7 @@ void TestSynth(void)
     printf("~~~~~~~Start testing synthesizer.~~~~~~~\n");
     for (uint8_t i = 0; i < POLY_NUM; i++)
     {
-        NoteOnAsm(&synthesizerC, i % 56);
+        NoteOnC(&synthesizerC, i % 56);
         NoteOnAsm(&synthesizerASM, i % 56);
     }
     for (uint16_t i = 0; i < TEST_LOOP_NUN; i++)

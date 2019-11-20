@@ -98,15 +98,18 @@ loopSynth:
 	add zl,t0l
 	adc zh,t0h
 	lpm t0l,Z
-	std Z+pSampleVal,t0l
+	std Y+pSampleVal,t0l
 
 
 	mulsu t0l,t2l ;r1:r0=sample*evnvlopelevel
-	std Y+pVal,r0
-	std Y+(pVal+1),r1
+	clr r0 ;(r1:r0)/255
+	sbrc r1,7 ;skip if bit 7(sign bit of signed 16) of r1 is 0
+	com r0 ;~r0=0xFF
+	std Y+pVal,r1
+	std Y+(pVal+1),r0
 	add mixOutl,r1 ; mixOut+=(r1:r0)>>8
 	clr r1 ; Always keep r1(zero)=0
-	adc mixOuth,zero
+	adc mixOuth,r0
 
 
 	ldd t0l,Y+pIncrement_frac
@@ -121,8 +124,8 @@ loopSynth:
 	ldd t0h,Y+pWavetablePos_int_h
 	adc t0h,zero
 
-	cpi t0l,lo8(WAVETABLE_CELESTA_C5_LEN)
-	ldi t1l,hi8(WAVETABLE_CELESTA_C5_LEN)
+	cpi t0l,lo8(WAVETABLE_CELESTA_C5_LEN+1) ; "+1" is to realize "<="
+	ldi t1l,hi8(WAVETABLE_CELESTA_C5_LEN+1)
 	cpc t0h,t1l
 	brlo branch0_end
 	subi t0l,lo8(WAVETABLE_CELESTA_C5_LOOP_LEN)
@@ -274,25 +277,25 @@ ldi zh,hi8(WaveTable_Celesta_C5_Increment)
 mov t0l,arg1l
 lsl t0l
 add zl,t0l
-adc zl,zero
+adc zh,zero
 lpm t1l,Z+
 lpm t1h,Z
 std Y+pIncrement_frac,t1l
-std Y+pIncrement_int,t1l
+std Y+pIncrement_int,t1h
 std Y+pWavetablePos_frac,zero
 std Y+pWavetablePos_int_l,zero
 std Y+pWavetablePos_int_h,zero
 std Y+pEnvelopePos,zero
-sei
-
 ldi t0l,255
 std Y+pEnvelopeLevel,t0l
+sei
 inc t0h
 cpi t0h,POLY_NUM
 brne lastSoundUnitUpdateEndNotEq
 clr t0h
 lastSoundUnitUpdateEndNotEq:
-std Y+pLastSoundUnit,t0l
+movw yl,arg0l
+std Y+pLastSoundUnit,t0h
 
 pop yh
 pop yl

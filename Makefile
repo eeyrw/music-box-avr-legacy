@@ -28,12 +28,13 @@ F_CPU = 16000000
 
 # Programmer type and connection port
 # Examples: avrisp2, usbtiny, stk500generic, dragon_isp, buspirate
-AVRDUDE_PROGRAMMER = avrisp2
-AVRDUDE_PORT = usb
+AVRDUDE_PROGRAMMER = arduino
+AVRDUDE_PORT = COM14
+AVRDUDE_BAUD = 115200
 
 # AVR tools location, specify absolute path if necessary
 #AVRTOOLSDIR = /usr/local/bin/
-AVRTOOLSDIR = D:/avr-gcc-9.1.0-x64-mingw/bin/
+AVRTOOLSDIR = D:/avr-gcc-9.2.0-x64-mingw/bin/
 
 ###### /!\ IMPORTANT SETTINGS END HERE /!\ ######
 
@@ -59,7 +60,7 @@ DEPS = $(addprefix $(DEPDIR)/, $(CSOURCES:.c=.d)) $(addprefix $(DEPDIR)/, $(ASOU
 # Programmer options
 AVRDUDE_FLASH = -U flash:w:$(BUILDTARGET).hex
 AVRDUDE_EEPROM = -U eeprom:w:$(BUILDTARGET).eep
-AVRDUDE_FLAGS = -v -p $(AVRDUDE_MCU) -c $(AVRDUDE_PROGRAMMER) -P $(AVRDUDE_PORT)
+AVRDUDE_FLAGS = -v -p $(AVRDUDE_MCU) -c $(AVRDUDE_PROGRAMMER) -P $(AVRDUDE_PORT) -b $(AVRDUDE_BAUD)
 
 # AVR tools
 FORMAT = ihex

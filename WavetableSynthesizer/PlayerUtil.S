@@ -16,14 +16,14 @@
 ; } Player;
 
 .equ pStatus,0
-.equ pCurrentTick_b3,1
-.equ pCurrentTick_b2,2
-.equ pCurrentTick_b1,3
-.equ pCurrentTick_b0,4
-.equ pLastScoreTick_b3,5
-.equ pLastScoreTick_b2,6
-.equ pLastScoreTick_b1,7
-.equ pLastScoreTick_b0,8
+.equ pCurrentTick_b0,1
+.equ pCurrentTick_b1,2
+.equ pCurrentTick_b2,3
+.equ pCurrentTick_b3,4
+.equ pLastScoreTick_b0,5
+.equ pLastScoreTick_b1,6
+.equ pLastScoreTick_b2,7
+.equ pLastScoreTick_b3,8
 .equ pDecayGenTick,9
 .equ pScorePointer,10
 .equ pMainSynthesizer,11
