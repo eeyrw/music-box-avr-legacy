@@ -8,7 +8,7 @@ extern void TestProcess(void);
 
 static int uart0_putchar(char c, FILE *stream);
 
-static FILE mystdout = FDEV_SETUP_STREAM(uart0_putchar, NULL,
+static FILE uart0Stdout = FDEV_SETUP_STREAM(uart0_putchar, NULL,
                                          _FDEV_SETUP_WRITE);
 
 static int
@@ -47,6 +47,7 @@ int main(void)
 {
 	CLKPR=0b10000000;
 	USART0_Init(115200);
+	stdout = &uart0Stdout;
 	printf("UART works!\n");
 	sei();
 	TestProcess();
