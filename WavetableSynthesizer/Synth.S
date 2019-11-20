@@ -105,8 +105,9 @@ loopSynth:
 	std Y+pVal,r0
 	std Y+(pVal+1),r1
 	add mixOutl,r1 ; mixOut+=(r1:r0)>>8
+	clr r1 ; Always keep r1(zero)=0
 	adc mixOuth,zero
-	clr r1 ; Always keep r1=0
+
 
 	ldd t0l,Y+pIncrement_frac
 	ldd t0h,Y+pWavetablePos_frac 

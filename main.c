@@ -1,8 +1,10 @@
 #include <avr/io.h>
+#include <stdio.h>
+#include <avr/interrupt.h>
 
 extern void TestProcess(void);
 
-#include <stdio.h>
+
 
 static int uart0_putchar(char c, FILE *stream);
 
@@ -27,16 +29,25 @@ void USART0_Init(uint32_t baud)
 	UBRR0L = (unsigned char) baudRegVal;
 	
 	/* Enable UART receiver and transmitter */
-	UCSR0B = ((1<<RXEN0)|(1<<TXEN0));
+	UCSR0B = ((1<<RXEN0)|(1<<TXEN0)|(1 << RXCIE0));
 	UCSR0A |=1<<U2X0;
 
 	/* Set frame format: 8 data 2stop */
 	UCSR0C = (1<<USBS0)|(1<<UCSZ01)|(1<<UCSZ00);
 }
+
+ISR(USART_RX_vect)
+{
+	unsigned char data;
+	data = UDR0;                 
+	/* Calculate buffer index */
+
+}
 int main(void)
 {
 	CLKPR=0b10000000;
 	USART0_Init(115200);
+	sei();
 	TestProcess();
 	return 0;
 }
