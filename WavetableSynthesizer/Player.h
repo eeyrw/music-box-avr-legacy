@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "SynthCore.h"
+#include <avr/pgmspace.h>
 
 
 enum PLAY_STATUS{

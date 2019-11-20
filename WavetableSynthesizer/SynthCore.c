@@ -4,7 +4,7 @@
 #include "WaveTable_Celesta_C5.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
-
+#include <avr/pgmspace.h>
 
 void SynthInit(Synthesizer* synth)
 {
@@ -26,7 +26,7 @@ void NoteOnC(Synthesizer* synth,uint8_t note)
 	uint8_t lastSoundUnit = synth->lastSoundUnit;
 
 	cli();
-	synth->SoundUnitUnionList[lastSoundUnit].combine.increment = WaveTable_Celesta_C5_Increment[note&0x7F];
+	synth->SoundUnitUnionList[lastSoundUnit].combine.increment = pgm_read_word(&WaveTable_Celesta_C5_Increment[note&0x7F]);
 	synth->SoundUnitUnionList[lastSoundUnit].combine.wavetablePos_frac = 0;
 	synth->SoundUnitUnionList[lastSoundUnit].combine.wavetablePos_int = 0;
 	synth->SoundUnitUnionList[lastSoundUnit].combine.envelopePos = 0;
@@ -49,8 +49,8 @@ void SynthC(Synthesizer* synth)
     {
 		if(soundUnionList[i].combine.envelopeLevel==0)
 			continue;
-        soundUnionList[i].combine.val=soundUnionList[i].combine.envelopeLevel*WaveTable_Celesta_C5[soundUnionList[i].combine.wavetablePos_int]/255;
-        soundUnionList[i].combine.sampleVal=WaveTable_Celesta_C5[soundUnionList[i].combine.wavetablePos_int];
+        soundUnionList[i].combine.val=soundUnionList[i].combine.envelopeLevel*(int8_t)pgm_read_byte(&WaveTable_Celesta_C5[soundUnionList[i].combine.wavetablePos_int])/255;
+        soundUnionList[i].combine.sampleVal=(int8_t)pgm_read_byte(&WaveTable_Celesta_C5[soundUnionList[i].combine.wavetablePos_int]);
 		uint32_t waveTablePos=soundUnionList[i].combine.increment+
                              soundUnionList[i].combine.wavetablePos_frac+
                              ((uint32_t)soundUnionList[i].combine.wavetablePos_int<<8); 
@@ -72,7 +72,7 @@ void GenDecayEnvlopeC(Synthesizer* synth)
 		if(soundUnionList[i].combine.wavetablePos_int >= WAVETABLE_CELESTA_C5_ATTACK_LEN &&
 				soundUnionList[i].combine.envelopePos <sizeof(EnvelopeTable)-1)
 		{
-			soundUnionList[i].combine.envelopeLevel = EnvelopeTable[soundUnionList[i].combine.envelopePos];
+			soundUnionList[i].combine.envelopeLevel = pgm_read_byte(&EnvelopeTable[soundUnionList[i].combine.envelopePos]);
 			soundUnionList[i].combine.envelopePos += 1;
 		}
 	}

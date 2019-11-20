@@ -29,7 +29,7 @@ void PlayerProcess(Player *player)
         {
             do
             {
-                temp = *(player->scorePointer);
+                temp = pgm_read_byte(player->scorePointer);
                 player->scorePointer++;
                 if (temp == 0xFF)
                 {
