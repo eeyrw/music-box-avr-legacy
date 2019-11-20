@@ -1,11 +1,12 @@
 #include <avr/io.h>
 #include <stdio.h>
 #include <avr/interrupt.h>
+#include "Player.h"
 
 extern void TestProcess(void);
 
 
-
+Player mainPlayer;
 static int uart0_putchar(char c, FILE *stream);
 
 static FILE uart0Stdout = FDEV_SETUP_STREAM(uart0_putchar, NULL,
@@ -48,7 +49,7 @@ void TIMER_Init()
 	OCR0A=62;		//Initalize TC0 in 32 kHz interval timer ( pclk=16M )
 	TCCR0A=0b00000010;
 	TCCR0B=0b00000010; //pclk/8
-	//TIMSK0=1<<OCIE0A; //Enable timer interrupt
+	TIMSK0=1<<OCIE0A; //Enable timer interrupt
 }
 
 ISR(USART_RX_vect)
@@ -62,17 +63,27 @@ ISR(USART_RX_vect)
 ISR(TIMER0_COMPA_vect)
 {
 	
-
+	Player32kProc(&mainPlayer);
 }
 
 int main(void)
 {
 	CLKPR=0b10000000;
 	USART0_Init(115200);
+	PlayerInit(&mainPlayer);
 	TIMER_Init();
+
 	stdout = &uart0Stdout;
 	printf("UART works!\n");
 	sei();
+	#ifndef RUN_TEST
+	PlayerPlay(&mainPlayer);
+#else
 	TestProcess();
+#endif
+	while (1)
+	{
+		PlayerProcess(&mainPlayer);
+	}
 	return 0;
 }
