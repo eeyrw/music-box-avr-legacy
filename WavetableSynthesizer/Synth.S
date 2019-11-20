@@ -26,11 +26,11 @@
 
 SoundUnitSize=10
 
-pIncrement_int=0
-pIncrement_frac=1
+pIncrement_int=1
+pIncrement_frac=0
 pWavetablePos_frac=2
-pWavetablePos_int_h=3
-pWavetablePos_int_l=4
+pWavetablePos_int_h=4
+pWavetablePos_int_l=3
 pEnvelopeLevel=5
 pEnvelopePos=6
 pVal=7
@@ -68,53 +68,56 @@ WAVETABLE_CELESTA_C5_LOOP_LEN=(WAVETABLE_CELESTA_C5_LEN - WAVETABLE_CELESTA_C5_A
 
 #define arg0l r24
 #define arg0h r25
+#define arg1l r22
+#define arg1h r23
 
 .extern	WaveTable_Celesta_C5
+.extern	EnvelopeTable
+.extern WaveTable_Celesta_C5_Increment
 
 SynthAsm:
-
+push yl
+push yh
 push loopIndex
 push mixOutl
 push mixOuth
 clr loopIndex
 clr mixOutl
 clr mixOuth
-movw zl,arg0l
+movw yl,arg0l
 loopSynth:
 	cpi loopIndex,POLY_NUM
 	breq loopSynth_end
-	ldd t2l,Z+pEnvelopeLevel ; Load evnvlopelevel to t2l
+	ldd t2l,Y+pEnvelopeLevel ; Load evnvlopelevel to t2l
 	cp t2l,zero
 	breq loopSynthContinue
-	movw t1l,zl ; Save reg Z to reg t1 temporarily
-	ldd zl,Z+pWavetablePos_int_l ; Get a sample by pWavetablePos_int and save to t0l
-	ldd zh,Z+pWavetablePos_int_h
+	ldd zl,Y+pWavetablePos_int_l ; Get a sample by pWavetablePos_int and save to t0l
+	ldd zh,Y+pWavetablePos_int_h
 	ldi t0l,lo8(WaveTable_Celesta_C5)
 	ldi t0h,hi8(WaveTable_Celesta_C5)
 	add zl,t0l
 	adc zh,t0h
 	lpm t0l,Z
-	movw zl,t1l ; Restore reg Z with reg t1
 	std Z+pSampleVal,t0l
 
 
 	mulsu t0l,t2l ;r1:r0=sample*evnvlopelevel
-	std Z+pVal,r0
-	std Z+(pVal+1),r1
+	std Y+pVal,r0
+	std Y+(pVal+1),r1
 	add mixOutl,r1 ; mixOut+=(r1:r0)>>8
 	adc mixOuth,zero
 	clr r1 ; Always keep r1=0
 
-	ldd t0l,Z+pIncrement_frac
-	ldd t0h,Z+pWavetablePos_frac 
+	ldd t0l,Y+pIncrement_frac
+	ldd t0h,Y+pWavetablePos_frac 
 	add t0l,t0h
-	std Z+pWavetablePos_frac,t0l
+	std Y+pWavetablePos_frac,t0l
 
-	ldd t0l,Z+pIncrement_int
-	ldd t0h,Z+pWavetablePos_int_l
+	ldd t0l,Y+pIncrement_int
+	ldd t0h,Y+pWavetablePos_int_l
 	adc t0l,t0h
 
-	ldd t0h,Z+pWavetablePos_int_h
+	ldd t0h,Y+pWavetablePos_int_h
 	adc t0h,zero
 
 	cpi t0l,lo8(WAVETABLE_CELESTA_C5_LEN)
@@ -125,22 +128,19 @@ loopSynth:
 	ldi t1l,hi8(WAVETABLE_CELESTA_C5_LOOP_LEN)
 	sbc t0h,t1l
 	branch0_end:
-	std Z+pWavetablePos_int_l,t0l
-	std Z+pWavetablePos_int_h,t0h
+	std Y+pWavetablePos_int_l,t0l
+	std Y+pWavetablePos_int_h,t0h
 loopSynthContinue:						
 inc loopIndex
 ldi t0l,SoundUnitSize
-add zl,t0l
-adc zh,zero
+add yl,t0l
+adc yh,zero
 rjmp loopSynth
 
 loopSynth_end:
-; 	ldw y,(0x06, sp) 
-; 	ldw x,(0x01,sp)
-; 	ldw (pMixOut,y),x
-movw zl,arg0l
-std Z+pMixOut,mixOutl
-std Z+pMixOut+1,mixOuth
+movw yl,arg0l
+std Y+pMixOut,mixOutl
+std Y+pMixOut+1,mixOuth
 
 asr mixOuth
 ror mixOutl
@@ -163,10 +163,10 @@ asr mixOuth ; Set it to PWM modulator ： 把16位的T2带符号位右移一位�
 ror mixOutl			
 ror	mixOuth				; 把T2H的高位右移，Carrier进到T2H的第七位
 mov	t0l, mixOutl			; 复制T2L到EL
-subi	t0l, 0x80	; EL=EL-0x80
+subi t0l, 0x80	; EL=EL-0x80
 mov	t0h, t0l			; 
 com	t0h				; EH取反
-sbrc	mixOuth, 7		; 如果T2H的第七位是0就跳过下面一行
+sbrc mixOuth, 7		; 如果T2H的第七位是0就跳过下面一行
 inc	t0l				; EL++
 sts OCR1AL,t0l
 sts OCR1BL,t0h
@@ -174,14 +174,18 @@ sts OCR1BL,t0h
 pop mixOuth
 pop mixOutl
 pop loopIndex
- 	ret
+pop yh
+pop yl
+ret
 
 GenDecayEnvlopeAsm:
 ; 	clr a				; Register A as loop index.
 ; 	ldw y,(0x03, sp) 		; Load sound unit pointer to register Y. (0x03, sp) is synthesizer object's address.
+push yl
+push yh
 push loopIndex
 clr loopIndex
-movw zl,arg0l
+movw yl,arg0l
 loopGeDecayEnvlope:
 ;     cp a,#POLY_NUM
 ;     jreq loopGenDecayEnvlope_end$
@@ -200,37 +204,43 @@ loopGeDecayEnvlope:
 ; 	;			soundUnionList[i].combine.envelopePos += 1;
 ; 	;		}
 ; 	;	}
-	ldd t0l,Z+pWavetablePos_int_l ; Get a sample by pWavetablePos_int and save to t0l
-	ldd t1l,Z+pWavetablePos_int_h
+	ldd t0l,Y+pWavetablePos_int_l ; 
+	ldd t0h,Y+pWavetablePos_int_h
 	cpi t0l,lo8(WAVETABLE_CELESTA_C5_ATTACK_LEN)
-	ldi t0h,hi8(WAVETABLE_CELESTA_C5_ATTACK_LEN)
+	ldi t1l,hi8(WAVETABLE_CELESTA_C5_ATTACK_LEN)
 	cpc t0h,t1l
-	brlo envelopUpdateEnd
-; 	ldw x,y
-; 	ldw x,(pWavetablePos_int_h,x)
-; 	cpw x,#WAVETABLE_CELESTA_C5_ATTACK_LEN
-; 	jrc envelopUpdateEnd$
-; 	ld a,(pEnvelopePos,y)
-; 	cp a,#(ENVELOP_LEN-1)
-; 	jrnc envelopUpdateEnd$
-; 	ld a,(pEnvelopePos,y)
-; 	clrw x
-; 	ld xl,a
-; 	ld a,(_EnvelopeTable,x)
-; 	ld (pEnvelopeLevel,y),a
-; 	inc (pEnvelopePos,y)
+	brlo envelopUpdateEnd ;t0h<t1l
 
+	ldd t0l,Y+pEnvelopePos ; Get a sample by pWavetablePos_int and save to t0l
+	cpi t0l,lo8(ENVELOP_LEN-1)
+	brsh envelopUpdateEnd ;t0h>=t1l
+
+	ldd zl,Y+pWavetablePos_int_l ; Get a sample by pWavetablePos_int and save to t0l
+	ldd zh,Y+pWavetablePos_int_h
+	ldi zl,lo8(EnvelopeTable)
+	ldi zh,hi8(EnvelopeTable)
+	add zl,t0l
+	adc zh,zero
+	lpm t0h,Z
+	std Y+pEnvelopeLevel,t0h
+	inc t0l
+	std Y+pEnvelopePos,t0h
 envelopUpdateEnd:	
-						
-; 	pop a
 inc loopIndex
-; 	addw y,#SoundUnitSize
-;     jra loopGenDecayEnvlope$
+ldi t0l,SoundUnitSize
+add yl,t0l
+adc yh,zero
+rjmp loopGeDecayEnvlope
 loopGenDecayEnvlope_end:
 pop loopIndex
+pop yh
+pop yl
 ret
 
 NoteOnAsm:
+push yl
+push yh
+movw yl,arg0l
 ; 	ldw y,(0x03, sp) 		; Load sound unit pointer to register Y. (0x03, sp) is synthesizer object's address.
 ; 	;void NoteOn(Synthesizer* synth,uint8_t note)
 ; 	;{
@@ -251,35 +261,40 @@ NoteOnAsm:
 
 ; 	;	synth->lastSoundUnit=lastSoundUnit;
 ; 	;}
-; 	ldw x,#SoundUnitSize
-; 	ld a,(pLastSoundUnit,y)
-; 	mul x,a
-; 	addw x,(0x03, sp)
-; 	ldw y,x
-; 	ld a,(0x05, sp) ;uint8_t note
-; 	sla a ;note*=2 and drop bit7
-; 	clrw x
-; 	ld xl,a
-; 	sim ;disable interrupt
-; 	ldw x,(_WaveTable_Celesta_C5_Increment,x)
-; 	ldw (pIncrement_int,y),x
-; 	clr (pWavetablePos_frac,y)
-; 	clr (pWavetablePos_int_h,y)
-; 	clr (pWavetablePos_int_l,y)
-; 	clr (pEnvelopePos,y)
-; 	ld a,#255
-; 	ld (pEnvelopeLevel,y),a
-; 	rim ;enable interrput
+cli
+ldi t0l,SoundUnitSize
+ldd t0h,Y+pLastSoundUnit
+mul t0l,t0h
+add yl,r0
+adc yh,r1
+clr r1 ; Always keep r1=0
+ldi zl,lo8(WaveTable_Celesta_C5_Increment)
+ldi zh,hi8(WaveTable_Celesta_C5_Increment)
+mov t0l,arg1l
+lsl t0l
+add zl,t0l
+adc zl,zero
+lpm t1l,Z+
+lpm t1h,Z
+std Y+pIncrement_frac,t1l
+std Y+pIncrement_int,t1l
+std Y+pWavetablePos_frac,zero
+std Y+pWavetablePos_int_l,zero
+std Y+pWavetablePos_int_h,zero
+std Y+pEnvelopePos,zero
+sei
 
-; 	ldw y,(0x03, sp)
-; 	ld a,(pLastSoundUnit,y)
-; 	inc a
-; 	cp a,#POLY_NUM
-; 	jrne lastSoundUnitUpdateEndNotEq$
-; 	clr a
-; lastSoundUnitUpdateEndNotEq$:
-; 	ld (pLastSoundUnit,y),a
+ldi t0l,255
+std Y+pEnvelopeLevel,t0l
+inc t0h
+cpi t0h,POLY_NUM
+brne lastSoundUnitUpdateEndNotEq
+clr t0h
+lastSoundUnitUpdateEndNotEq:
+std Y+pLastSoundUnit,t0l
 
+pop yh
+pop yl
 
 ret
 .end

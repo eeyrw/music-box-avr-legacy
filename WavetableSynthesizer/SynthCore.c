@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "WaveTable_Celesta_C5.h"
 #include <avr/io.h>
+#include <avr/interrupt.h>
 
 
 void SynthInit(Synthesizer* synth)
@@ -24,13 +25,13 @@ void NoteOnC(Synthesizer* synth,uint8_t note)
 {
 	uint8_t lastSoundUnit = synth->lastSoundUnit;
 
-	//disable_interrupts();
+	cli();
 	synth->SoundUnitUnionList[lastSoundUnit].combine.increment = WaveTable_Celesta_C5_Increment[note&0x7F];
 	synth->SoundUnitUnionList[lastSoundUnit].combine.wavetablePos_frac = 0;
 	synth->SoundUnitUnionList[lastSoundUnit].combine.wavetablePos_int = 0;
 	synth->SoundUnitUnionList[lastSoundUnit].combine.envelopePos = 0;
 	synth->SoundUnitUnionList[lastSoundUnit].combine.envelopeLevel = 255;
-	//enable_interrupts();
+	sei();
 
 	lastSoundUnit++;
 
@@ -46,6 +47,8 @@ void SynthC(Synthesizer* synth)
     SoundUnitUnion* soundUnionList=&(synth->SoundUnitUnionList[0]);
     for(uint8_t i=0;i<POLY_NUM;i++)
     {
+		if(soundUnionList[i].combine.envelopeLevel==0)
+			continue;
         soundUnionList[i].combine.val=soundUnionList[i].combine.envelopeLevel*WaveTable_Celesta_C5[soundUnionList[i].combine.wavetablePos_int]/255;
         soundUnionList[i].combine.sampleVal=WaveTable_Celesta_C5[soundUnionList[i].combine.wavetablePos_int];
 		uint32_t waveTablePos=soundUnionList[i].combine.increment+
