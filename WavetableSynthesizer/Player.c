@@ -38,6 +38,7 @@ void PlayerProcess(Player *player)
                 else
                 {
                     NoteOnAsm(&(player->mainSynthesizer), temp);
+                    printf("Note On:%d\n",temp);
                 }
             } while ((temp & 0x80) == 0);
             PlayUpdateNextScoreTick(player);

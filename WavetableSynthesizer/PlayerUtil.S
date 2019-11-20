@@ -30,6 +30,8 @@
 
 #define zl r30
 #define zh r31
+#define yl r28
+#define yh r29
 #define zero r1
 #define t0l r18
 #define t0h r19
@@ -111,31 +113,35 @@ PlayUpdateNextScoreTick:
 ;         ;        tempU32+=temp;
 ;         ;    } while (temp==0xFF);
 ;         ;    player->lastScoreTick=tempU32;
-movw zl,arg0l
+push yl
+push yh
+movw yl,arg0l
 varTickAccumulateLoop:
-ldd t0l,Z+pScorePointer
-ldd t0h,Z+(pScorePointer+1)
+ldd t0l,Y+pScorePointer
+ldd t0h,Y+(pScorePointer+1)
 movw zl,t0l
-ld t0l,Z
+lpm t0l,Z
 
-ldd t0h,Z+pLastScoreTick_b0
+ldd t0h,Y+pLastScoreTick_b0
 add t0h,t0l
-std Z+pLastScoreTick_b0,t0h
+std Y+pLastScoreTick_b0,t0h
 
-ldd t0h,Z+pLastScoreTick_b1
+ldd t0h,Y+pLastScoreTick_b1
 adc t0h,zero
-std Z+pLastScoreTick_b1,t0h
+std Y+pLastScoreTick_b1,t0h
 
-ldd t0h,Z+pLastScoreTick_b2
+ldd t0h,Y+pLastScoreTick_b2
 adc t0h,zero
-std Z+pLastScoreTick_b2,t0h
+std Y+pLastScoreTick_b2,t0h
 
-ldd t0h,Z+pLastScoreTick_b3
+ldd t0h,Y+pLastScoreTick_b3
 adc t0h,zero
-std Z+pLastScoreTick_b3,t0h
+std Y+pLastScoreTick_b3,t0h
 
 cpi t0l,0xff
 breq varTickAccumulateLoop
+pop yh
+pop yl
     ret
 .end
 
