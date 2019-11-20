@@ -47,6 +47,7 @@ int main(void)
 {
 	CLKPR=0b10000000;
 	USART0_Init(115200);
+	printf("UART works!\n");
 	sei();
 	TestProcess();
 	return 0;
