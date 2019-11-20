@@ -24,7 +24,7 @@ AVRDUDE_MCU = atmega328p
 # This tells the code what speed you've selected via the
 # fuses and/or external clock sources. It does not set
 # the actual processor speed.
-F_CPU = 8000000
+F_CPU = 16000000
 
 # Programmer type and connection port
 # Examples: avrisp2, usbtiny, stk500generic, dragon_isp, buspirate
