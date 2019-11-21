@@ -26,7 +26,7 @@
 .equ pLastScoreTick_b3,8
 .equ pDecayGenTick,9
 .equ pScorePointer,10
-.equ pMainSynthesizer,11
+.equ pMainSynthesizer,12
 
 #define zl r30
 #define zh r31

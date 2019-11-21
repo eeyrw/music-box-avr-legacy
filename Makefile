@@ -180,5 +180,4 @@ clean:
 	-$(REMOVE) $(OBJECTS)
 	-$(REMOVE) $(DEPS)
 	-$(REMOVE) $(BUILDTARGET).hex $(BUILDTARGET).elf $(BUILDTARGET).eep
-	-find $(BUILDDIR) -type d -empty -delete
 	@echo "Done cleaning."

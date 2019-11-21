@@ -217,7 +217,7 @@ loopGeDecayEnvlope:
 
 	ldd t0l,Y+pEnvelopePos ; Get a sample by pWavetablePos_int and save to t0l
 	cpi t0l,lo8(ENVELOP_LEN-1)
-	brsh envelopUpdateEnd ;t0h>=t1l
+	brsh envelopUpdateEnd ;t0l>=ENVELOP_LEN-1
 
 	ldd zl,Y+pWavetablePos_int_l ; Get a sample by pWavetablePos_int and save to t0l
 	ldd zh,Y+pWavetablePos_int_h
