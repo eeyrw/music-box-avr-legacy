@@ -62,8 +62,9 @@ ISR(USART_RX_vect)
 
 ISR(TIMER0_COMPA_vect)
 {
-	
+	PORTB|=1;
 	Player32kProc(&mainPlayer);
+	PORTB&=~1;
 }
 
 int main(void)
