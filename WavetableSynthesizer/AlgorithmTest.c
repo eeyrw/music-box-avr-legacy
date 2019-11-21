@@ -146,7 +146,6 @@ void TestSynth(void)
 
         SynthAsm(&synthesizerASM);
         SynthC(&synthesizerC);
-        GenDecayEnvlopeC(&synthesizerC);
         GenDecayEnvlopeAsm(&synthesizerASM);
         GenDecayEnvlopeC(&synthesizerC);
         GenDecayEnvlopeAsm(&synthesizerASM);
@@ -160,6 +159,7 @@ void TestSynth(void)
         GenDecayEnvlopeAsm(&synthesizerASM);
         GenDecayEnvlopeC(&synthesizerC);
         GenDecayEnvlopeAsm(&synthesizerASM);
+        GenDecayEnvlopeC(&synthesizerC);
 
         printf("=============%d==============\n", i);
         if (SynthParamterCompare(&synthesizerC, &synthesizerASM) > 0)
