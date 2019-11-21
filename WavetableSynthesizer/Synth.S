@@ -183,31 +183,24 @@ pop yl
 ret
 
 GenDecayEnvlopeAsm:
-; 	clr a				; Register A as loop index.
-; 	ldw y,(0x03, sp) 		; Load sound unit pointer to register Y. (0x03, sp) is synthesizer object's address.
 push yl
 push yh
 push loopIndex
 clr loopIndex
 movw yl,arg0l
 loopGeDecayEnvlope:
-;     cp a,#POLY_NUM
-;     jreq loopGenDecayEnvlope_end$
 	cpi loopIndex,POLY_NUM
 	breq loopGenDecayEnvlope_end
-; 	push a				; Keep a as temporary variable
-; 	; loop body
-
-; 	;    SoundUnitUnion* soundUnionList=&(synth->SoundUnitUnionList[0]);
-; 	;	for (uint8_t i = 0; i < POLY_NUM; i++)
-; 	;	{
-; 	;		if(soundUnionList[i].combine.wavetablePos_int >= WAVETABLE_CELESTA_C5_ATTACK_LEN &&
-; 	;				soundUnionList[i].combine.envelopePos < sizeof(EnvelopeTable)-1)
-; 	;		{
-; 	;			soundUnionList[i].combine.envelopeLevel = EnvelopeTable[soundUnionList[i].combine.envelopePos];
-; 	;			soundUnionList[i].combine.envelopePos += 1;
-; 	;		}
-; 	;	}
+;    SoundUnitUnion* soundUnionList=&(synth->SoundUnitUnionList[0]);
+;	for (uint8_t i = 0; i < POLY_NUM; i++)
+;	{
+;		if(soundUnionList[i].combine.wavetablePos_int >= WAVETABLE_CELESTA_C5_ATTACK_LEN &&
+;				soundUnionList[i].combine.envelopePos < sizeof(EnvelopeTable)-1)
+;		{
+;			soundUnionList[i].combine.envelopeLevel = EnvelopeTable[soundUnionList[i].combine.envelopePos];
+;			soundUnionList[i].combine.envelopePos += 1;
+;		}
+;	}
 	ldd t0l,Y+pWavetablePos_int_l ; 
 	ldd t0h,Y+pWavetablePos_int_h
 	cpi t0l,lo8(WAVETABLE_CELESTA_C5_ATTACK_LEN)
