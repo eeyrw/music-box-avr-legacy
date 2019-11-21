@@ -215,20 +215,18 @@ loopGeDecayEnvlope:
 	cpc t0h,t1l
 	brlo envelopUpdateEnd ;t0h<t1l
 
-	ldd t0l,Y+pEnvelopePos ; Get a sample by pWavetablePos_int and save to t0l
+	ldd t0l,Y+pEnvelopePos ; Get envelopePos and save to t0l
 	cpi t0l,lo8(ENVELOP_LEN-1)
 	brsh envelopUpdateEnd ;t0l>=ENVELOP_LEN-1
 
-	ldd zl,Y+pWavetablePos_int_l ; Get a sample by pWavetablePos_int and save to t0l
-	ldd zh,Y+pWavetablePos_int_h
 	ldi zl,lo8(EnvelopeTable)
 	ldi zh,hi8(EnvelopeTable)
 	add zl,t0l
 	adc zh,zero
-	lpm t0h,Z
+	lpm t0h,Z ; Get envelope level and save to t0h
 	std Y+pEnvelopeLevel,t0h
 	inc t0l
-	std Y+pEnvelopePos,t0h
+	std Y+pEnvelopePos,t0l
 envelopUpdateEnd:	
 inc loopIndex
 ldi t0l,SoundUnitSize
