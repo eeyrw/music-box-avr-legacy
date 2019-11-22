@@ -6,22 +6,17 @@
 #include "Player.h"
 
 extern unsigned char Score[];
-
-void Player32kProc(Player *player)
-{
-    SynthAsm(&(player->mainSynthesizer));
-    UpdateTick(player);
-}
+Player mainPlayer;
 
 void PlayerProcess(Player *player)
 {
 
     uint8_t temp;
     
-    if (player->decayGenTick >= 150)
+    if (player->synthesizerPointer->decayGenTick >= 150)
     {
-        GenDecayEnvlopeAsm(&(player->mainSynthesizer));
-        player->decayGenTick = 0;
+        GenDecayEnvlopeAsm();
+        player->synthesizerPointer->decayGenTick = 0;
     }
     if (player->status == STATUS_PLAYING)
     {
@@ -37,7 +32,7 @@ void PlayerProcess(Player *player)
                 }
                 else
                 {
-                    NoteOnAsm(&(player->mainSynthesizer), temp);
+                    NoteOnAsm(temp);
                     //printf("Note On:%02x\n",temp);
                 }
             } while ((temp & 0x80) == 0);
@@ -50,19 +45,18 @@ void PlayerPlay(Player *player)
 {
     player->currentTick = 0;
     player->lastScoreTick = 0;
-    player->decayGenTick = 0;
     player->scorePointer = Score;
     PlayUpdateNextScoreTick(player);
     player->status = STATUS_PLAYING;
 
 }
 
-void PlayerInit(Player *player)
+void PlayerInit(Player *player,Synthesizer *synthesizer)
 {
     player->status = STATUS_STOP;
     player->currentTick = 0;
     player->lastScoreTick = 0;
-    player->decayGenTick = 0;
     player->scorePointer = Score;
-    SynthInit(&(player->mainSynthesizer));
+    player->synthesizerPointer = synthesizer;
+    SynthInit(synthesizer);
 }

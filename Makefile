@@ -32,6 +32,8 @@ AVRDUDE_PROGRAMMER = arduino
 AVRDUDE_PORT = COM14
 AVRDUDE_BAUD = 115200
 
+IS_COMPILE_C_ASM_TEST = NO_RUN_TEST
+
 # AVR tools location, specify absolute path if necessary
 #AVRTOOLSDIR = /usr/local/bin/
 AVRTOOLSDIR = D:/avr-gcc-9.2.0-x64-mingw/bin/
@@ -73,7 +75,7 @@ OBJDUMP = $(AVRTOOLSDIR)avr-objdump
 CC = $(AVRTOOLSDIR)avr-gcc
 OPTIMIZATION = s
 CSTANDARD = c11
-CFLAGS = -O$(OPTIMIZATION) -g -std=$(CSTANDARD) -DF_CPU=$(F_CPU)UL -DRUN_TEST -mmcu=$(MCU) $(INC_DIR)
+CFLAGS = -O$(OPTIMIZATION) -g -std=$(CSTANDARD) -DF_CPU=$(F_CPU)UL -D$(IS_COMPILE_C_ASM_TEST) -mmcu=$(MCU) $(INC_DIR)
 CFLAGS += -Wl,--gc-sections -ffunction-sections -fdata-sections
 DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
 REMOVE = rm -f

@@ -74,8 +74,12 @@ WAVETABLE_CELESTA_C5_LOOP_LEN=(WAVETABLE_CELESTA_C5_LEN - WAVETABLE_CELESTA_C5_A
 .extern	WaveTable_Celesta_C5
 .extern	EnvelopeTable
 .extern WaveTable_Celesta_C5_Increment
+.extern synthForAsm
 
-SynthAsm:
+
+
+
+SynthAsm: ; Register usage: t0l,t0h:r18,r19 t1l:r20, zl,zh:r30,r31
 push yl
 push yh
 push loopIndex
@@ -84,36 +88,19 @@ push mixOuth
 clr loopIndex
 clr mixOutl
 clr mixOuth
-movw yl,arg0l
+ldi yl,lo8(synthForAsm)
+ldi yh,hi8(synthForAsm)
 loopSynth:
 	cpi loopIndex,POLY_NUM
 	breq loopSynth_end
-	ldd t2l,Y+pEnvelopeLevel ; Load evnvlopelevel to t2l
+	ldd t1l,Y+pEnvelopeLevel ; Load evnvlopelevel to t1l
 #ifdef RUN_TEST	
-	cp t2l,zero
+	cp t1l,zero
 	breq loopSynthContinue
 #endif		
 	ldd zl,Y+pWavetablePos_int_l ; Get a sample by pWavetablePos_int and save to t0l
 	ldd zh,Y+pWavetablePos_int_h
-	ldi t0l,lo8(WaveTable_Celesta_C5)
-	ldi t0h,hi8(WaveTable_Celesta_C5)
-	add zl,t0l
-	adc zh,t0h
-	lpm t0l,Z
-#ifdef RUN_TEST
-	std Y+pSampleVal,t0l
-#endif
-	mulsu t0l,t2l ;r1:r0=sample*evnvlopelevel
-	clr r0 ;(r1:r0)/255
-	sbrc r1,7 ;skip if bit 7(sign bit of signed 16) of r1 is 0
-	com r0 ;~r0=0xFF
-#ifdef RUN_TEST	
-	std Y+pVal,r1
-	std Y+(pVal+1),r0
-#endif	
-	add mixOutl,r1 ; mixOut+=(r1:r0)>>8
-	clr r1 ; Always keep r1(zero)=0
-	adc mixOuth,r0
+
 
 
 	ldd t0l,Y+pIncrement_frac
@@ -122,10 +109,9 @@ loopSynth:
 	std Y+pWavetablePos_frac,t0l
 
 	ldd t0l,Y+pIncrement_int
-	ldd t0h,Y+pWavetablePos_int_l
-	adc t0l,t0h
+	adc t0l,zl
 
-	ldd t0h,Y+pWavetablePos_int_h
+	mov t0h,zh
 	adc t0h,zero
 
 	cpi t0l,lo8(WAVETABLE_CELESTA_C5_LEN+1) ; "+1" is to realize "<="
@@ -138,6 +124,52 @@ loopSynth:
 	branch0_end:
 	std Y+pWavetablePos_int_l,t0l
 	std Y+pWavetablePos_int_h,t0h
+
+
+
+	ldi t0l,lo8(WaveTable_Celesta_C5)
+	ldi t0h,hi8(WaveTable_Celesta_C5)
+	add zl,t0l
+	adc zh,t0h
+	lpm t0l,Z
+#ifdef RUN_TEST
+	std Y+pSampleVal,t0l
+#endif
+	mulsu t0l,t1l ;r1:r0=sample*evnvlopelevel
+	clr r0 ;(r1:r0)/255
+	sbrc r1,7 ;skip if bit 7(sign bit of signed 16) of r1 is 0
+	com r0 ;~r0=0xFF
+#ifdef RUN_TEST	
+	std Y+pVal,r1
+	std Y+(pVal+1),r0
+#endif	
+	add mixOutl,r1 ; mixOut+=(r1:r0)>>8
+	clr r1 ; Always keep r1(zero)=0
+	adc mixOuth,r0
+
+
+	; ldd t0l,Y+pIncrement_frac
+	; ldd t0h,Y+pWavetablePos_frac 
+	; add t0l,t0h
+	; std Y+pWavetablePos_frac,t0l
+
+	; ldd t0l,Y+pIncrement_int
+	; ldd t0h,Y+pWavetablePos_int_l
+	; adc t0l,t0h
+
+	; ldd t0h,Y+pWavetablePos_int_h
+	; adc t0h,zero
+
+	; cpi t0l,lo8(WAVETABLE_CELESTA_C5_LEN+1) ; "+1" is to realize "<="
+	; ldi t1l,hi8(WAVETABLE_CELESTA_C5_LEN+1)
+	; cpc t0h,t1l
+	; brlo branch0_end
+	; subi t0l,lo8(WAVETABLE_CELESTA_C5_LOOP_LEN)
+	; ldi t1l,hi8(WAVETABLE_CELESTA_C5_LOOP_LEN)
+	; sbc t0h,t1l
+	; branch0_end:
+	; std Y+pWavetablePos_int_l,t0l
+	; std Y+pWavetablePos_int_h,t0h
 loopSynthContinue:						
 inc loopIndex
 ldi t0l,SoundUnitSize
@@ -146,7 +178,8 @@ adc yh,zero
 rjmp loopSynth
 
 loopSynth_end:
-movw yl,arg0l
+ldi yl,lo8(synthForAsm)
+ldi yh,hi8(synthForAsm)
 std Y+pMixOut,mixOutl
 std Y+pMixOut+1,mixOuth
 

@@ -41,21 +41,28 @@ typedef struct _Synthesizer
     SoundUnitUnion SoundUnitUnionList[POLY_NUM];
 	int16_t mixOut;
     uint8_t lastSoundUnit;
+	uint8_t  decayGenTick;	
 }Synthesizer;
 
 
 extern void SynthInit(Synthesizer* synth);
 
 #ifdef RUN_TEST
-extern void NoteOnC(Synthesizer* synth,uint8_t note);
-extern void SynthC(Synthesizer* synth);
-extern void GenDecayEnvlopeC(Synthesizer* synth);
+extern void NoteOnC(uint8_t note);
+extern void SynthC(void);
+extern void GenDecayEnvlopeC(void);
 #endif
 
-extern void NoteOnAsm(Synthesizer* synth,uint8_t note);
-extern void GenDecayEnvlopeAsm(Synthesizer* synth);
-extern void SynthAsm(Synthesizer* synth);
+extern void NoteOnAsm(uint8_t note);
+extern void GenDecayEnvlopeAsm(void);
+extern void SynthAsm(void);
 
 extern const uint8_t EnvelopeTable[256];
+
+#ifdef RUN_TEST
+extern Synthesizer synthForC;
+#endif
+
+extern Synthesizer synthForAsm;
 
 #endif

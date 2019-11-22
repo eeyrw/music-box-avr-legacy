@@ -41,7 +41,11 @@
 #define arg0l r24
 #define arg0h r25
 
-UpdateTick:
+.extern synthForAsm
+.extern mainPlayer
+
+
+UpdateTick: ; register usage t0l:r18,zh:r31,zl:r30
 ; ; void Player32kProc(Player* player)
 ; ; {
 ; ;     Synth(&(player->mainSynthesizer));
@@ -50,7 +54,8 @@ UpdateTick:
 ; ;         player->decayGenTick+=1;
 ; ; }
 ; Player* player r25:r24
-movw zl,arg0l
+ldi zl,lo8(mainPlayer)
+ldi zh,hi8(mainPlayer)
 sec
 ldd t0l,Z+pCurrentTick_b0
 adc t0l,zero

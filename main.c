@@ -6,7 +6,7 @@
 extern void TestProcess(void);
 
 
-Player mainPlayer;
+
 static int uart0_putchar(char c, FILE *stream);
 
 static FILE uart0Stdout = FDEV_SETUP_STREAM(uart0_putchar, NULL,
@@ -60,31 +60,24 @@ ISR(USART_RX_vect)
 
 }
 
-ISR(TIMER0_COMPA_vect)
-{
-	PORTB|=1;
-	Player32kProc(&mainPlayer);
-	PORTB&=~1;
-}
-
 int main(void)
 {
 	CLKPR=0b10000000;
 	USART0_Init(115200);
-	PlayerInit(&mainPlayer);
+	PlayerInit(&mainPlayer,&synthForAsm);
 	TIMER_Init();
 
 	stdout = &uart0Stdout;
 	printf("UART works!\n");
 	sei();
-	#ifndef RUN_TEST
+#ifndef RUN_TEST
 	PlayerPlay(&mainPlayer);
-#else
-	TestProcess();
-#endif
 	while (1)
 	{
 		PlayerProcess(&mainPlayer);
 	}
+#else
+	TestProcess();
+#endif
 	return 0;
 }

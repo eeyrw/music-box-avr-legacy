@@ -5,16 +5,11 @@
 #include <stdio.h>
 
 #define TEST_LOOP_NUN 10000
-Player mainPlayer;
-
-Synthesizer synthesizerC;
-Synthesizer synthesizerASM;
 
 void TestInit(void)
-{
-    PlayerInit(&mainPlayer);
-    SynthInit(&synthesizerC);
-    SynthInit(&synthesizerASM);
+{ 
+    SynthInit(&synthForC);
+    SynthInit(&synthForAsm);
 }
 
 int16_t abs_u16(int16_t num)
@@ -75,7 +70,7 @@ void TestUpdateTickFunc(void)
 {
     uint32_t i;
     Player player;
-    PlayerInit(&player);
+    PlayerInit(&player,&synthForC);
     printf("~~~~~~~Start testing updateTickFunc.~~~~~~~\n");
     for (i = 0; i < 0xffff; i++)
     {
@@ -119,9 +114,9 @@ uint8_t SynthParamterCompare(Synthesizer *synthA, Synthesizer *synthB)
     {
         printf("%d error(s) found:\n", error);
         printf("Synth C:\n");
-        PrintParameters(&synthesizerC);
+        PrintParameters(&synthForC);
         printf("Synth ASM:\n");
-        PrintParameters(&synthesizerASM);
+        PrintParameters(&synthForAsm);
     }
     else
     {
@@ -135,34 +130,34 @@ void TestSynth(void)
     printf("~~~~~~~Start testing synthesizer.~~~~~~~\n");
     for (uint8_t i = 0; i < POLY_NUM; i++)
     {
-        NoteOnC(&synthesizerC, i % 56);
-        NoteOnAsm(&synthesizerASM, i % 56);
+        NoteOnC(i % 56);
+        NoteOnAsm(i % 56);
     }
     for (uint16_t i = 0; i < TEST_LOOP_NUN; i++)
     {
         //PlayerProcess(&mainPlayer);
-        NoteOnC(&synthesizerC, i % 56);
-        NoteOnAsm(&synthesizerASM, i % 56);
+        NoteOnC(i % 56);
+        NoteOnAsm(i % 56);
 
-        SynthAsm(&synthesizerASM);
-        SynthC(&synthesizerC);
-        GenDecayEnvlopeAsm(&synthesizerASM);
-        GenDecayEnvlopeC(&synthesizerC);
-        GenDecayEnvlopeAsm(&synthesizerASM);
-        GenDecayEnvlopeC(&synthesizerC);
-        GenDecayEnvlopeAsm(&synthesizerASM);
-        GenDecayEnvlopeC(&synthesizerC);
-        NoteOnC(&synthesizerC, i % 56);
-        NoteOnAsm(&synthesizerASM, i % 56);
-        GenDecayEnvlopeAsm(&synthesizerASM);
-        GenDecayEnvlopeC(&synthesizerC);
-        GenDecayEnvlopeAsm(&synthesizerASM);
-        GenDecayEnvlopeC(&synthesizerC);
-        GenDecayEnvlopeAsm(&synthesizerASM);
-        GenDecayEnvlopeC(&synthesizerC);
+        SynthAsm();
+        SynthC();
+        GenDecayEnvlopeAsm();
+        GenDecayEnvlopeC();
+        GenDecayEnvlopeAsm();
+        GenDecayEnvlopeC();
+        GenDecayEnvlopeAsm();
+        GenDecayEnvlopeC();
+        NoteOnC(i % 56);
+        NoteOnAsm(i % 56);
+        GenDecayEnvlopeAsm();
+        GenDecayEnvlopeC();
+        GenDecayEnvlopeAsm();
+        GenDecayEnvlopeC();
+        GenDecayEnvlopeAsm();
+        GenDecayEnvlopeC();
 
         printf("=============%d==============\n", i);
-        if (SynthParamterCompare(&synthesizerC, &synthesizerASM) > 0)
+        if (SynthParamterCompare(&synthForC, &synthForAsm) > 0)
             break;
     }
 }

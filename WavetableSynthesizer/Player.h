@@ -17,18 +17,18 @@ typedef struct _Player
 	uint8_t status;
     uint32_t  currentTick;
 	uint32_t  lastScoreTick;
-	uint8_t  decayGenTick;
     uint8_t* scorePointer;
-    Synthesizer mainSynthesizer;
+    Synthesizer* synthesizerPointer;
 } Player;
 
 
-extern void PlayerInit(Player* player);
-extern void Player32kProc(Player* player);
+extern void PlayerInit(Player* player,Synthesizer *synthesizer);
 extern void PlayerProcess(Player* player);
 extern void PlayerPlay(Player* player);
 
 extern void UpdateTick(Player* player);
 extern uint8_t PlayNoteTimingCheck(Player* player);
 extern void PlayUpdateNextScoreTick(Player* player);
+
+extern Player mainPlayer;
 #endif

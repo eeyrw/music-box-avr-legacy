@@ -6,6 +6,13 @@
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 
+#ifdef RUN_TEST
+Synthesizer synthForC;
+#endif
+
+Synthesizer synthForAsm;
+
+
 void SynthInit(Synthesizer* synth)
 {
     SoundUnitUnion* soundUnionList=&(synth->SoundUnitUnionList[0]);
@@ -21,16 +28,16 @@ void SynthInit(Synthesizer* synth)
     synth->lastSoundUnit=0;
 }
 #ifdef RUN_TEST
-void NoteOnC(Synthesizer* synth,uint8_t note)
+void NoteOnC(uint8_t note)
 {
-	uint8_t lastSoundUnit = synth->lastSoundUnit;
+	uint8_t lastSoundUnit = synthForC.lastSoundUnit;
 
 	cli();
-	synth->SoundUnitUnionList[lastSoundUnit].combine.increment = pgm_read_word(&WaveTable_Celesta_C5_Increment[note&0x7F]);
-	synth->SoundUnitUnionList[lastSoundUnit].combine.wavetablePos_frac = 0;
-	synth->SoundUnitUnionList[lastSoundUnit].combine.wavetablePos_int = 0;
-	synth->SoundUnitUnionList[lastSoundUnit].combine.envelopePos = 0;
-	synth->SoundUnitUnionList[lastSoundUnit].combine.envelopeLevel = 255;
+	synthForC.SoundUnitUnionList[lastSoundUnit].combine.increment = pgm_read_word(&WaveTable_Celesta_C5_Increment[note&0x7F]);
+	synthForC.SoundUnitUnionList[lastSoundUnit].combine.wavetablePos_frac = 0;
+	synthForC.SoundUnitUnionList[lastSoundUnit].combine.wavetablePos_int = 0;
+	synthForC.SoundUnitUnionList[lastSoundUnit].combine.envelopePos = 0;
+	synthForC.SoundUnitUnionList[lastSoundUnit].combine.envelopeLevel = 255;
 	sei();
 
 	lastSoundUnit++;
@@ -38,13 +45,13 @@ void NoteOnC(Synthesizer* synth,uint8_t note)
 	if (lastSoundUnit== POLY_NUM)
 		lastSoundUnit = 0;
 
-    synth->lastSoundUnit=lastSoundUnit;
+    synthForC.lastSoundUnit=lastSoundUnit;
 }
 
-void SynthC(Synthesizer* synth)
+void SynthC(void)
 {
-    synth->mixOut=0;
-    SoundUnitUnion* soundUnionList=&(synth->SoundUnitUnionList[0]);
+    synthForC.mixOut=0;
+    SoundUnitUnion* soundUnionList=&(synthForC.SoundUnitUnionList[0]);
     for(uint8_t i=0;i<POLY_NUM;i++)
     {
 		if(soundUnionList[i].combine.envelopeLevel==0)
@@ -60,13 +67,13 @@ void SynthC(Synthesizer* synth)
            waveTablePosInt-=WAVETABLE_CELESTA_C5_LOOP_LEN;
         soundUnionList[i].combine.wavetablePos_int= waveTablePosInt;
         soundUnionList[i].combine.wavetablePos_frac=0xFF&waveTablePos;
-        synth->mixOut+=soundUnionList[i].combine.val;
+        synthForC.mixOut+=soundUnionList[i].combine.val;
     }
 }
 
-void GenDecayEnvlopeC(Synthesizer* synth)
+void GenDecayEnvlopeC(void)
 {
-    SoundUnitUnion* soundUnionList=&(synth->SoundUnitUnionList[0]);
+    SoundUnitUnion* soundUnionList=&(synthForC.SoundUnitUnionList[0]);
 	for (uint8_t i = 0; i < POLY_NUM; i++)
 	{
 		if(soundUnionList[i].combine.wavetablePos_int >= WAVETABLE_CELESTA_C5_ATTACK_LEN &&
