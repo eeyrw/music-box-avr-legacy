@@ -272,7 +272,8 @@ ret
 NoteOnAsm:
 push yl
 push yh
-movw yl,arg0l
+ldi yl,lo8(synthForAsm)
+ldi yh,hi8(synthForAsm)
 ; 	ldw y,(0x03, sp) 		; Load sound unit pointer to register Y. (0x03, sp) is synthesizer object's address.
 ; 	;void NoteOn(Synthesizer* synth,uint8_t note)
 ; 	;{
@@ -302,7 +303,7 @@ adc yh,r1
 clr r1 ; Always keep r1=0
 ldi zl,lo8(WaveTable_Celesta_C5_Increment)
 ldi zh,hi8(WaveTable_Celesta_C5_Increment)
-mov t0l,arg1l
+mov t0l,arg0l
 lsl t0l
 add zl,t0l
 adc zh,zero
@@ -322,7 +323,8 @@ cpi t0h,POLY_NUM
 brne lastSoundUnitUpdateEndNotEq
 clr t0h
 lastSoundUnitUpdateEndNotEq:
-movw yl,arg0l
+ldi yl,lo8(synthForAsm)
+ldi yh,hi8(synthForAsm)
 std Y+pLastSoundUnit,t0h
 
 pop yh
