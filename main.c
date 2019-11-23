@@ -4,7 +4,7 @@
 #include "Player.h"
 
 extern void TestProcess(void);
-
+Player mainPlayer;
 
 
 static int uart0_putchar(char c, FILE *stream);

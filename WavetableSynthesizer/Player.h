@@ -24,7 +24,6 @@ typedef struct _Player
 extern void PlayerInit(Player* player,Synthesizer *synthesizer);
 extern void PlayerProcess(Player* player);
 extern void PlayerPlay(Player* player);
-extern void UpdateTick(void);
 extern uint8_t PlayNoteTimingCheck(Player* player);
 extern void PlayUpdateNextScoreTick(Player* player);
 

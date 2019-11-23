@@ -7,14 +7,13 @@
 #include "PeriodTimer.h"
 
 extern unsigned char Score[];
-Player mainPlayer;
 
 void PlayerProcess(Player *player)
 {
 
     uint8_t temp;
     
-    if (decayGenTick >= 80)
+    if (decayGenTick >= 150)
     {
         GenDecayEnvlopeAsm();
         decayGenTick = 0;
@@ -56,7 +55,7 @@ void PlayerInit(Player *player,Synthesizer *synthesizer)
 {
     player->status = STATUS_STOP;
     player->lastScoreTick = 0;
-        currentTick=0;
+    currentTick=0;
     player->scorePointer = Score;
     player->synthesizerPointer = synthesizer;
     SynthInit(synthesizer);

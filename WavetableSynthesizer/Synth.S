@@ -270,15 +270,17 @@ ldi yh,hi8(synthForAsm)
 ; 	;}
 
 ldi t0l,SoundUnitSize
+cli
 ldd t0h,Y+pLastSoundUnit
 mul t0l,t0h
 add yl,r0
 adc yh,r1
 clr r1 ; Always keep r1=0
-ldi zl,lo8(WaveTable_Celesta_C5_Increment)
-ldi zh,hi8(WaveTable_Celesta_C5_Increment)
+sei
 mov t0l,arg0l
 lsl t0l
+ldi zl,lo8(WaveTable_Celesta_C5_Increment)
+ldi zh,hi8(WaveTable_Celesta_C5_Increment)
 add zl,t0l
 adc zh,zero
 lpm t1l,Z+

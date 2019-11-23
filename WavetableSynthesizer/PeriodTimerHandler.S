@@ -66,6 +66,7 @@ WAVETABLE_CELESTA_C5_LOOP_LEN=(WAVETABLE_CELESTA_C5_LEN - WAVETABLE_CELESTA_C5_A
 #define t2h r23
 #define mixOutl r14
 #define mixOuth r15
+#define mixOute t2h
 #define loopIndex r16
 
 #define arg0l r24
@@ -106,9 +107,11 @@ PeriodTimerHandler:
 	push loopIndex
 	push mixOutl
 	push mixOuth
+	push mixOute	
 	clr loopIndex
 	clr mixOutl
 	clr mixOuth
+	clr mixOute	
 	ldi yl,lo8(synthForAsm)
 	ldi yh,hi8(synthForAsm)
 	loopSynth:
@@ -154,16 +157,21 @@ PeriodTimerHandler:
 		std Y+pSampleVal,t0l
 	#endif
 		mulsu t0l,t1h ;r1:r0=sample*evnvlopelevel
-		clr r0 ;(r1:r0)/255
-		sbrc r1,7 ;skip if bit 7(sign bit of signed 16) of r1 is 0
-		com r0 ;~r0=0xFF
+		; clr r0 ;(r1:r0)/255
+		; sbrc r1,7 ;skip if bit 7(sign bit of signed 16) of r1 is 0
+		; com r0 ;~r0=0xFF
 	#ifdef RUN_TEST	
 		std Y+pVal,r1
 		std Y+(pVal+1),r0
 	#endif	
-		add mixOutl,r1 ; mixOut+=(r1:r0)>>8
-		clr r1 ; Always keep r1(zero)=0
-		adc mixOuth,r0
+		clr t0l ;(r1:r0)/255
+		sbrc r1,7 ;skip if bit 7(sign bit of signed 16) of r1 is 0
+		com t0l ;~r0=0xFF	
+		add mixOutl,r0 ; mixOut+=(r1:r0)>>8
+		adc mixOuth,r1			
+		adc mixOute,t0l
+		clr r1 ; Always keep r1(zero)=0			
+
 
 	loopSynthContinue:						
 	inc loopIndex
@@ -173,6 +181,13 @@ PeriodTimerHandler:
 	rjmp loopSynth
 
 	loopSynth_end:
+
+	mov mixOutl,mixOuth
+	mov mixOuth,mixOute
+	;clr mixOuth ;(r1:r0)/255
+	;sbrc mixOutl,7 ;skip if bit 7(sign bit of signed 16) of r1 is 0
+	;com mixOuth ;~r0=0xFF
+
 	#ifdef RUN_TEST
 	sts synthForAsm+pMixOut,mixOutl
 	sts synthForAsm+pMixOut+1,mixOuth
@@ -207,6 +222,7 @@ PeriodTimerHandler:
 	sts OCR1AL,t0l
 	sts OCR1BL,t0h
 
+	pop mixOute	
 	pop mixOuth
 	pop mixOutl
 	pop loopIndex
@@ -231,7 +247,7 @@ PeriodTimerHandler:
 	sts currentTick+3,t0l
 
 	lds t0l,decayGenTick
-	cpi t0l,80
+	cpi t0l,150
 	brsh updateDecayGenTickEnd ; BRSH – Branch if Same or Higher (Unsigned)
 	inc t0l
 	sts decayGenTick,t0l

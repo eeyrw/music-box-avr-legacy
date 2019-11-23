@@ -38,7 +38,6 @@
 #define arg0h r25
 
 .extern synthForAsm
-.extern mainPlayer
 
 
 UpdateTick: ; register usage t0l:r18,zh:r31,zl:r30
@@ -77,20 +76,7 @@ updateDecayGenTickEnd:
 ret
 
 PlayNoteTimingCheck:
-; ;if((player->currentTick>>8)>=player->lastScoreTick)
-; 	ldw y,(0x03, sp) 		; Load sound unit pointer to register Y. (0x03, sp) is player object's address.
-;     ld a,(pLastScoreTick_b2,y)
-;     cp a,(pCurrentTick_b3,y) ;Set flag C is (pCurrentTick_b3,y)>(pLastScoreTick_b2,y)
-;     jrc playNoteTimingCheckEndReturnTrue$
-;     ldw x,y
-;     ldw x,(pLastScoreTick_b1,x)
-;     cpw x,(pCurrentTick_b2,y)
-;     jrc playNoteTimingCheckEndReturnTrue$
-;     clr a
-;     ret
-; playNoteTimingCheckEndReturnTrue$:
-;     ld a,#0xff
-; Player* player r25:r24
+;if((currentTick>>8)>=player->lastScoreTick)
 movw zl,arg0l
 cli
 lds t0l,(currentTick+1)
