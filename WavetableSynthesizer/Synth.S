@@ -41,7 +41,7 @@ pLastSoundUnit=SoundUnitSize*POLY_NUM+2
 
 
 ENVELOP_LEN=256
-POLY_NUM=5
+POLY_NUM=6
 WAVETABLE_CELESTA_C5_ATTACK_LEN=1998
 WAVETABLE_CELESTA_C5_LEN=2608
 WAVETABLE_CELESTA_C5_LOOP_LEN=(WAVETABLE_CELESTA_C5_LEN - WAVETABLE_CELESTA_C5_ATTACK_LEN)
@@ -78,8 +78,7 @@ WAVETABLE_CELESTA_C5_LOOP_LEN=(WAVETABLE_CELESTA_C5_LEN - WAVETABLE_CELESTA_C5_A
 
 
 
-
-SynthAsm: ; Register usage: t0l,t0h:r18,r19 t1l:r20, zl,zh:r30,r31
+SynthAsm: ; Register usage: t0l,t0h:r18,r19 t1l,t1h:r20,r21 zl,zh:r30,r31
 push yl
 push yh
 push loopIndex
@@ -93,14 +92,11 @@ ldi yh,hi8(synthForAsm)
 loopSynth:
 	cpi loopIndex,POLY_NUM
 	breq loopSynth_end
-	ldd t1l,Y+pEnvelopeLevel ; Load evnvlopelevel to t1l
-#ifdef RUN_TEST	
-	cp t1l,zero
-	breq loopSynthContinue
-#endif		
+	ldd t1h,Y+pEnvelopeLevel ; Load evnvlopelevel to t1h	
+	cp t1h,zero
+	breq loopSynthContinue	
 	ldd zl,Y+pWavetablePos_int_l ; Get a sample by pWavetablePos_int and save to t0l
 	ldd zh,Y+pWavetablePos_int_h
-
 
 
 	ldd t0l,Y+pIncrement_frac
@@ -135,7 +131,7 @@ loopSynth:
 #ifdef RUN_TEST
 	std Y+pSampleVal,t0l
 #endif
-	mulsu t0l,t1l ;r1:r0=sample*evnvlopelevel
+	mulsu t0l,t1h ;r1:r0=sample*evnvlopelevel
 	clr r0 ;(r1:r0)/255
 	sbrc r1,7 ;skip if bit 7(sign bit of signed 16) of r1 is 0
 	com r0 ;~r0=0xFF
@@ -147,29 +143,6 @@ loopSynth:
 	clr r1 ; Always keep r1(zero)=0
 	adc mixOuth,r0
 
-
-	; ldd t0l,Y+pIncrement_frac
-	; ldd t0h,Y+pWavetablePos_frac 
-	; add t0l,t0h
-	; std Y+pWavetablePos_frac,t0l
-
-	; ldd t0l,Y+pIncrement_int
-	; ldd t0h,Y+pWavetablePos_int_l
-	; adc t0l,t0h
-
-	; ldd t0h,Y+pWavetablePos_int_h
-	; adc t0h,zero
-
-	; cpi t0l,lo8(WAVETABLE_CELESTA_C5_LEN+1) ; "+1" is to realize "<="
-	; ldi t1l,hi8(WAVETABLE_CELESTA_C5_LEN+1)
-	; cpc t0h,t1l
-	; brlo branch0_end
-	; subi t0l,lo8(WAVETABLE_CELESTA_C5_LOOP_LEN)
-	; ldi t1l,hi8(WAVETABLE_CELESTA_C5_LOOP_LEN)
-	; sbc t0h,t1l
-	; branch0_end:
-	; std Y+pWavetablePos_int_l,t0l
-	; std Y+pWavetablePos_int_h,t0h
 loopSynthContinue:						
 inc loopIndex
 ldi t0l,SoundUnitSize
@@ -178,10 +151,10 @@ adc yh,zero
 rjmp loopSynth
 
 loopSynth_end:
-ldi yl,lo8(synthForAsm)
-ldi yh,hi8(synthForAsm)
-std Y+pMixOut,mixOutl
-std Y+pMixOut+1,mixOuth
+#ifdef RUN_TEST
+sts synthForAsm+pMixOut,mixOutl
+sts synthForAsm+pMixOut+1,mixOuth
+#endif
 
 asr mixOuth
 ror mixOutl
@@ -224,7 +197,8 @@ push yl
 push yh
 push loopIndex
 clr loopIndex
-movw yl,arg0l
+ldi yl,lo8(synthForAsm)
+ldi yh,hi8(synthForAsm)
 loopGeDecayEnvlope:
 	cpi loopIndex,POLY_NUM
 	breq loopGenDecayEnvlope_end
@@ -294,7 +268,7 @@ ldi yh,hi8(synthForAsm)
 
 ; 	;	synth->lastSoundUnit=lastSoundUnit;
 ; 	;}
-cli
+
 ldi t0l,SoundUnitSize
 ldd t0h,Y+pLastSoundUnit
 mul t0l,t0h
@@ -309,6 +283,7 @@ add zl,t0l
 adc zh,zero
 lpm t1l,Z+
 lpm t1h,Z
+cli
 std Y+pIncrement_frac,t1l
 std Y+pIncrement_int,t1h
 std Y+pWavetablePos_frac,zero

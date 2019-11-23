@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define POLY_NUM 5
+#define POLY_NUM 6
 
 typedef struct _SoundUnit
 {
@@ -41,7 +41,6 @@ typedef struct _Synthesizer
     SoundUnitUnion SoundUnitUnionList[POLY_NUM];
 	int16_t mixOut;
     uint8_t lastSoundUnit;
-	uint8_t  decayGenTick;	
 }Synthesizer;
 
 

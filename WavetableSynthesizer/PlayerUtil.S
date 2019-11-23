@@ -5,28 +5,24 @@
 .globl PlayNoteTimingCheck
 .globl PlayUpdateNextScoreTick
 
+.extern currentTick
+.extern decayGenTick
+
 ; typedef struct _Player
 ; {
 ; 	uint8_t status;
-;     uint32_t  currentTick;
 ; 	uint32_t  lastScoreTick;
-; 	uint8_t  decayGenTick;
-;     uint8_t* scorePointer;
-;     Synthesizer mainSynthesizer;
+;   uint8_t* scorePointer;
+;   Synthesizer mainSynthesizer;
 ; } Player;
 
 .equ pStatus,0
-.equ pCurrentTick_b0,1
-.equ pCurrentTick_b1,2
-.equ pCurrentTick_b2,3
-.equ pCurrentTick_b3,4
-.equ pLastScoreTick_b0,5
-.equ pLastScoreTick_b1,6
-.equ pLastScoreTick_b2,7
-.equ pLastScoreTick_b3,8
-.equ pDecayGenTick,9
-.equ pScorePointer,10
-.equ pMainSynthesizer,12
+.equ pLastScoreTick_b0,1
+.equ pLastScoreTick_b1,2
+.equ pLastScoreTick_b2,3
+.equ pLastScoreTick_b3,4
+.equ pScorePointer,5
+.equ pMainSynthesizer,7
 
 #define zl r30
 #define zh r31
@@ -54,27 +50,29 @@ UpdateTick: ; register usage t0l:r18,zh:r31,zl:r30
 ; ;         player->decayGenTick+=1;
 ; ; }
 ; Player* player r25:r24
-ldi zl,lo8(mainPlayer)
-ldi zh,hi8(mainPlayer)
+ldi zl,lo8(currentTick)
+ldi zh,hi8(currentTick)
 sec
-ldd t0l,Z+pCurrentTick_b0
+ldd t0l,Z+0
 adc t0l,zero
-std Z+pCurrentTick_b0,t0l
-ldd t0l,Z+pCurrentTick_b1
+std Z+0,t0l
+ldd t0l,Z+1
 adc t0l,zero
-std Z+pCurrentTick_b1,t0l
-ldd t0l,Z+pCurrentTick_b2
+std Z+1,t0l
+ldd t0l,Z+2
 adc t0l,zero
-std Z+pCurrentTick_b2,t0l
-ldd t0l,Z+pCurrentTick_b3
+std Z+2,t0l
+ldd t0l,Z+3
 adc t0l,zero
-std Z+pCurrentTick_b3,t0l
+std Z+3,t0l
 
-ldd t0l,Z+pDecayGenTick
+ldi zl,lo8(decayGenTick)
+ldi zh,hi8(decayGenTick)
+ld t0l,Z
 cpi t0l,150
 brsh updateDecayGenTickEnd ; BRSH – Branch if Same or Higher (Unsigned)
 inc t0l
-std Z+pDecayGenTick,t0l
+st Z,t0l
 updateDecayGenTickEnd:
 ret
 
@@ -95,13 +93,13 @@ PlayNoteTimingCheck:
 ; Player* player r25:r24
 movw zl,arg0l
 cli
-ldd t0l,Z+pCurrentTick_b1
+lds t0l,(currentTick+1)
 ldd t0h,Z+pLastScoreTick_b0
 cp t0l,t0h
-ldd t0l,Z+pCurrentTick_b2
+lds t0l,(currentTick+2)
 ldd t0h,Z+pLastScoreTick_b1
 cpc t0l,t0h
-ldd t0l,Z+pCurrentTick_b3
+lds t0l,(currentTick+3)
 ldd t0h,Z+pLastScoreTick_b2
 cpc t0l,t0h
 sei

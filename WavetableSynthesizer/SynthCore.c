@@ -56,7 +56,7 @@ void SynthC(void)
     {
 		if(soundUnionList[i].combine.envelopeLevel==0)
 			continue;
-        soundUnionList[i].combine.val=soundUnionList[i].combine.envelopeLevel*(int8_t)pgm_read_byte(&WaveTable_Celesta_C5[soundUnionList[i].combine.wavetablePos_int])/255;
+        soundUnionList[i].combine.val=soundUnionList[i].combine.envelopeLevel*(int8_t)pgm_read_byte(&WaveTable_Celesta_C5[soundUnionList[i].combine.wavetablePos_int])>>8;
         soundUnionList[i].combine.sampleVal=(int8_t)pgm_read_byte(&WaveTable_Celesta_C5[soundUnionList[i].combine.wavetablePos_int]);
 		uint32_t waveTablePos=soundUnionList[i].combine.increment+
                              soundUnionList[i].combine.wavetablePos_frac+

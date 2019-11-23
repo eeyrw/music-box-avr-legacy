@@ -4,6 +4,7 @@
 #include <avr/io.h>
 #include "SynthCore.h"
 #include "Player.h"
+#include "PeriodTimer.h"
 
 extern unsigned char Score[];
 Player mainPlayer;
@@ -13,10 +14,10 @@ void PlayerProcess(Player *player)
 
     uint8_t temp;
     
-    if (player->synthesizerPointer->decayGenTick >= 150)
+    if (decayGenTick >= 80)
     {
         GenDecayEnvlopeAsm();
-        player->synthesizerPointer->decayGenTick = 0;
+        decayGenTick = 0;
     }
     if (player->status == STATUS_PLAYING)
     {
@@ -43,9 +44,9 @@ void PlayerProcess(Player *player)
 
 void PlayerPlay(Player *player)
 {
-    player->currentTick = 0;
     player->lastScoreTick = 0;
     player->scorePointer = Score;
+    currentTick=0;
     PlayUpdateNextScoreTick(player);
     player->status = STATUS_PLAYING;
 
@@ -54,8 +55,8 @@ void PlayerPlay(Player *player)
 void PlayerInit(Player *player,Synthesizer *synthesizer)
 {
     player->status = STATUS_STOP;
-    player->currentTick = 0;
     player->lastScoreTick = 0;
+        currentTick=0;
     player->scorePointer = Score;
     player->synthesizerPointer = synthesizer;
     SynthInit(synthesizer);

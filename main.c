@@ -64,13 +64,15 @@ int main(void)
 {
 	CLKPR=0b10000000;
 	USART0_Init(115200);
+	stdout = &uart0Stdout;
+	printf("UART works!\n");
+#ifndef RUN_TEST	
 	PlayerInit(&mainPlayer,&synthForAsm);
 	TIMER_Init();
 
-	stdout = &uart0Stdout;
-	printf("UART works!\n");
+
 	sei();
-#ifndef RUN_TEST
+
 	PlayerPlay(&mainPlayer);
 	while (1)
 	{

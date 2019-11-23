@@ -1,6 +1,8 @@
 {
     "C_Cpp.default.defines": ["RUN_TEST"],
     "files.associations": {
-        "*.S": "avr"
-      },
+      "*.S": "avr",
+      "player.h": "c",
+      "synthcore.h": "c"
+    },
 }
