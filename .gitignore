@@ -27,3 +27,4 @@ build
 *.ipch
 .DS_Store
 builds/
+/.vscode/settings.json
