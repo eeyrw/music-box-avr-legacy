@@ -1,4 +1,5 @@
 #include <avr/io.h>
+#include "lgt8fx.h"
 
 .extern	UpdateTick
 .extern GenDecayEnvlopeAsm
@@ -215,12 +216,14 @@ PeriodTimerHandler:
 	ror	mixOuth				; 把T2H的高位右移，Carrier进到T2H的第七位
 	mov	t0l, mixOutl			; 复制T2L到EL
 	subi t0l, 0x80	; EL=EL-0x80
+
 	mov	t0h, t0l			; 
 	com	t0h				; EH取反
 	sbrc mixOuth, 7		; 如果T2H的第七位是0就跳过下面一行
 	inc	t0l				; EL++
-	sts OCR1AL,t0l
-	sts OCR1BL,t0h
+	;sts OCR1AL,t0l
+	;sts OCR1BL,t0h
+	sts DALR,t0l
 
 	pop mixOute	
 	pop mixOuth

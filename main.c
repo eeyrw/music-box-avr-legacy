@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <avr/interrupt.h>
 #include "Player.h"
+#include "lgt8fx.h"
 
 extern void TestProcess(void);
 Player mainPlayer;
@@ -21,6 +22,10 @@ uart0_putchar(char c, FILE *stream)
   return 0;
 }
 
+#ifdef F_CPU
+#undef F_CPU
+#endif
+#define F_CPU 32000000
 /* Initialize UART */
 void USART0_Init(uint32_t baud)
 {
@@ -46,10 +51,18 @@ void TIMER_Init()
 	//ICNC1 ICES1 – WGM13 WGM12 CS12 CS11 CS10 ; Fast PWM pclk/1
 	TCCR1B=0b00001001;
 
-	OCR0A=62;		//Initalize TC0 in 32 kHz interval timer ( pclk=16M )
+	OCR0A=124;		//Initalize TC0 in 32 kHz interval timer ( pclk=32M )
 	TCCR0A=0b00000010;
 	TCCR0B=0b00000010; //pclk/8
 	TIMSK0=1<<OCIE0A; //Enable timer interrupt
+}
+
+void DAC_Init(void)
+{
+	DACON=((1<<DACEN)|(1<<DAOE));
+	DALR=0;
+	MCUCR|=1<<PUD;
+	DDRD&=~(1<<4);
 }
 
 ISR(USART_RX_vect)
@@ -63,13 +76,14 @@ ISR(USART_RX_vect)
 int main(void)
 {
 	CLKPR=0b10000000;
+	CLKPR=0b00000000;
 	USART0_Init(115200);
 	stdout = &uart0Stdout;
 	printf("UART works!\n");
 #ifndef RUN_TEST	
 	PlayerInit(&mainPlayer,&synthForAsm);
 	TIMER_Init();
-
+	DAC_Init();
 
 	sei();
 
