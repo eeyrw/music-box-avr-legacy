@@ -1,106 +1,8 @@
-#include <avr/io.h>
+#include "WaveTable.h"
+#include "SynthCore.h"
+#include "AsmCommon.h"
 
-.extern	UpdateTick
-.extern GenDecayEnvlopeAsm
-.extern SynthAsm
-
-
-#define PeriodTimerHandler TIMER0_COMPA_vect
-;typedef struct _SoundUnit
-;{
-;	uint8_t increment_frac;
-;	uint8_t increment_int;
-;	uint8_t  wavetablePos_frac;
-;	uint16_t  wavetablePos_int;
-;	uint8_t envelopeLevel;
-;	uint8_t envelopePos;
-;	int16_t val;
-;	int8_t sampleVal;
-;} SoundUnit;
-
-
-;typedef struct _Synthesizer
-;{
-;    SoundUnitUnion SoundUnitUnionList[POLY_NUM];
-;	int16_t mixOut;
-;    uint8_t lastSoundUnit;
-;}Synthesizer;
-
-SoundUnitSize=10
-
-pIncrement_int=1
-pIncrement_frac=0
-pWavetablePos_frac=2
-pWavetablePos_int_h=4
-pWavetablePos_int_l=3
-pEnvelopeLevel=5
-pEnvelopePos=6
-pVal=7
-pSampleVal=9
-
-pMixOut=SoundUnitSize*POLY_NUM
-pLastSoundUnit=SoundUnitSize*POLY_NUM+2
-
-
-ENVELOP_LEN=256
-POLY_NUM=6
-WAVETABLE_CELESTA_C5_ATTACK_LEN=1998
-WAVETABLE_CELESTA_C5_LEN=2608
-WAVETABLE_CELESTA_C5_LOOP_LEN=(WAVETABLE_CELESTA_C5_LEN - WAVETABLE_CELESTA_C5_ATTACK_LEN)
-
-
-
-
-#define xl r26
-#define xh r27
-#define yl r28
-#define yh r29
-#define zl r30
-#define zh r31
-#define zero r1
-#define t0l r18
-#define t0h r19
-#define t1l r20
-#define t1h r21
-#define t2l r22
-#define t2h r23
-#define mixOutl r14
-#define mixOuth r15
-#define mixOute t2h
-#define loopIndex r16
-
-#define arg0l r24
-#define arg0h r25
-#define arg1l r22
-#define arg1h r23
-
-.extern	WaveTable_Celesta_C5
-.extern	EnvelopeTable
-.extern WaveTable_Celesta_C5_Increment
-.extern synthForAsm
-
-.section .bss
-.global currentTick
-currentTick:
-.skip 4
-.global decayGenTick
-decayGenTick:
-.skip 1
-
-.section .text
-.global PeriodTimerHandler
-PeriodTimerHandler:
-	sbi _SFR_IO_ADDR(PORTB),0
-	in	r0, _SFR_IO_ADDR(SREG)
-	push r0
-	push r18
-	push r19
-	push r20
-	push r21	
-	push r30
-	push r31
-    ;call SynthAsm
-
+.section .text 
 	SynthAsm: ; Register usage: t0l,t0h:r18,r19 t1l,t1h:r20,r21 zl,zh:r30,r31
 	push yl
 	push yh
@@ -135,12 +37,12 @@ PeriodTimerHandler:
 		mov t0h,zh
 		adc t0h,zero
 
-		cpi t0l,lo8(WAVETABLE_CELESTA_C5_LEN+1) ; "+1" is to realize "<="
-		ldi t1l,hi8(WAVETABLE_CELESTA_C5_LEN+1)
+		cpi t0l,lo8(WAVETABLE_LEN+1) ; "+1" is to realize "<="
+		ldi t1l,hi8(WAVETABLE_LEN+1)
 		cpc t0h,t1l
 		brlo branch0_end
-		subi t0l,lo8(WAVETABLE_CELESTA_C5_LOOP_LEN)
-		ldi t1l,hi8(WAVETABLE_CELESTA_C5_LOOP_LEN)
+		subi t0l,lo8(WAVETABLE_LOOP_LEN)
+		ldi t1l,hi8(WAVETABLE_LOOP_LEN)
 		sbc t0h,t1l
 		branch0_end:
 		std Y+pWavetablePos_int_l,t0l
@@ -148,8 +50,8 @@ PeriodTimerHandler:
 
 
 
-		ldi t0l,lo8(WaveTable_Celesta_C5)
-		ldi t0h,hi8(WaveTable_Celesta_C5)
+		ldi t0l,lo8(WaveTable)
+		ldi t0h,hi8(WaveTable)
 		add zl,t0l
 		adc zh,t0h
 		lpm t0l,Z
@@ -228,38 +130,3 @@ PeriodTimerHandler:
 	pop loopIndex
 	pop yh
 	pop yl
-
-
-    ;call UpdateTick
- 
-	sec
-	lds t0l,currentTick
-	adc t0l,zero
-	sts currentTick,t0l
-	lds t0l,currentTick+1
-	adc t0l,zero
-	sts currentTick+1,t0l
-	lds t0l,currentTick+2
-	adc t0l,zero
-	sts currentTick+2,t0l
-	lds t0l,currentTick+3
-	adc t0l,zero
-	sts currentTick+3,t0l
-
-	lds t0l,decayGenTick
-	cpi t0l,150
-	brsh updateDecayGenTickEnd ; BRSH – Branch if Same or Higher (Unsigned)
-	inc t0l
-	sts decayGenTick,t0l
-	updateDecayGenTickEnd:
-
-	pop r31
-	pop r30
-	pop r21	
-	pop r20
-	pop r19
-	pop r18
-	pop r0
-	out	_SFR_IO_ADDR(SREG), r0
-	cbi _SFR_IO_ADDR(PORTB),0
-	reti

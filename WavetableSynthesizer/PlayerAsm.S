@@ -1,80 +1,10 @@
-#include <avr/io.h>
-.text
+#include "Player.h"
+#include "AsmCommon.h"
 
-.globl UpdateTick
 .globl PlayNoteTimingCheck
 .globl PlayUpdateNextScoreTick
 
-.extern currentTick
-.extern decayGenTick
-
-; typedef struct _Player
-; {
-; 	uint8_t status;
-; 	uint32_t  lastScoreTick;
-;   uint8_t* scorePointer;
-;   Synthesizer mainSynthesizer;
-; } Player;
-
-.equ pStatus,0
-.equ pLastScoreTick_b0,1
-.equ pLastScoreTick_b1,2
-.equ pLastScoreTick_b2,3
-.equ pLastScoreTick_b3,4
-.equ pScorePointer,5
-.equ pMainSynthesizer,7
-
-#define zl r30
-#define zh r31
-#define yl r28
-#define yh r29
-#define zero r1
-#define t0l r18
-#define t0h r19
-#define t1l r20
-#define t1h r21
-
-#define arg0l r24
-#define arg0h r25
-
-.extern synthForAsm
-
-
-UpdateTick: ; register usage t0l:r18,zh:r31,zl:r30
-; ; void Player32kProc(Player* player)
-; ; {
-; ;     Synth(&(player->mainSynthesizer));
-; ;     player->currentTick++;
-; ;     if(player->decayGenTick<200)
-; ;         player->decayGenTick+=1;
-; ; }
-; Player* player r25:r24
-ldi zl,lo8(currentTick)
-ldi zh,hi8(currentTick)
-sec
-ldd t0l,Z+0
-adc t0l,zero
-std Z+0,t0l
-ldd t0l,Z+1
-adc t0l,zero
-std Z+1,t0l
-ldd t0l,Z+2
-adc t0l,zero
-std Z+2,t0l
-ldd t0l,Z+3
-adc t0l,zero
-std Z+3,t0l
-
-ldi zl,lo8(decayGenTick)
-ldi zh,hi8(decayGenTick)
-ld t0l,Z
-cpi t0l,150
-brsh updateDecayGenTickEnd ; BRSH – Branch if Same or Higher (Unsigned)
-inc t0l
-st Z,t0l
-updateDecayGenTickEnd:
-ret
-
+.text
 PlayNoteTimingCheck:
 ;if((currentTick>>8)>=player->lastScoreTick)
 movw zl,arg0l

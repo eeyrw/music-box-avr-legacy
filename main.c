@@ -69,10 +69,7 @@ int main(void)
 #ifndef RUN_TEST	
 	PlayerInit(&mainPlayer,&synthForAsm);
 	TIMER_Init();
-
-
 	sei();
-
 	PlayerPlay(&mainPlayer);
 	while (1)
 	{

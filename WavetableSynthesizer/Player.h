@@ -1,6 +1,17 @@
 #ifndef __PLAYER_H__
 #define __PLAYER_H__
 
+
+
+#define pStatus 0
+#define pLastScoreTick_b0 1
+#define pLastScoreTick_b1 2
+#define pLastScoreTick_b2 3
+#define pLastScoreTick_b3 4
+#define pScorePointer 5
+#define pMainSynthesizer 7
+
+#ifndef __ASSEMBLER__
 #include <stdint.h>
 #include "SynthCore.h"
 #include <avr/pgmspace.h>
@@ -28,4 +39,6 @@ extern uint8_t PlayNoteTimingCheck(Player* player);
 extern void PlayUpdateNextScoreTick(Player* player);
 
 extern Player mainPlayer;
+#endif
+
 #endif

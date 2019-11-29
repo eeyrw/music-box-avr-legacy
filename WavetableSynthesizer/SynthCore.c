@@ -1,7 +1,7 @@
 #include "SynthCore.h"
 #include <stdint.h>
 #include <stdio.h>
-#include "WaveTable_Celesta_C5.h"
+#include "WaveTable.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
@@ -33,7 +33,7 @@ void NoteOnC(uint8_t note)
 	uint8_t lastSoundUnit = synthForC.lastSoundUnit;
 
 	cli();
-	synthForC.SoundUnitUnionList[lastSoundUnit].combine.increment = pgm_read_word(&WaveTable_Celesta_C5_Increment[note&0x7F]);
+	synthForC.SoundUnitUnionList[lastSoundUnit].combine.increment = pgm_read_word(&WaveTable_Increment[note&0x7F]);
 	synthForC.SoundUnitUnionList[lastSoundUnit].combine.wavetablePos_frac = 0;
 	synthForC.SoundUnitUnionList[lastSoundUnit].combine.wavetablePos_int = 0;
 	synthForC.SoundUnitUnionList[lastSoundUnit].combine.envelopePos = 0;
@@ -56,8 +56,8 @@ void SynthC(void)
     {
 		if(soundUnionList[i].combine.envelopeLevel==0)
 			continue;
-        soundUnionList[i].combine.val=soundUnionList[i].combine.envelopeLevel*(int8_t)pgm_read_byte(&WaveTable_Celesta_C5[soundUnionList[i].combine.wavetablePos_int])>>8;
-        soundUnionList[i].combine.sampleVal=(int8_t)pgm_read_byte(&WaveTable_Celesta_C5[soundUnionList[i].combine.wavetablePos_int]);
+        soundUnionList[i].combine.val=soundUnionList[i].combine.envelopeLevel*(int8_t)pgm_read_byte(&WaveTable[soundUnionList[i].combine.wavetablePos_int])>>8;
+        soundUnionList[i].combine.sampleVal=(int8_t)pgm_read_byte(&WaveTable[soundUnionList[i].combine.wavetablePos_int]);
 		uint32_t waveTablePos=soundUnionList[i].combine.increment+
                              soundUnionList[i].combine.wavetablePos_frac+
                              ((uint32_t)soundUnionList[i].combine.wavetablePos_int<<8); 
