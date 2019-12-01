@@ -1,9 +1,9 @@
 #ifndef __SYNTH_CORE_H__
 #define __SYNTH_CORE_H__
 
-
 #define POLY_NUM 6
 #define ENVELOP_LEN 256
+#define DECAY_TIME_FACTOR 100
 
 #define SoundUnitSize 10
 
@@ -17,16 +17,21 @@
 #define pVal 7
 #define pSampleVal 9
 
-#define pMixOut SoundUnitSize*POLY_NUM
-#define pLastSoundUnit (SoundUnitSize*POLY_NUM+2)
+#define pMixOut SoundUnitSize *POLY_NUM
+#define pLastSoundUnit (SoundUnitSize * POLY_NUM + 2)
 
 #ifndef __ASSEMBLER__
 #include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct _SoundUnit
 {
 	uint16_t increment;
-	uint8_t  wavetablePos_frac;
-	uint16_t  wavetablePos_int;
+	uint8_t wavetablePos_frac;
+	uint16_t wavetablePos_int;
 	uint8_t envelopeLevel;
 	uint8_t envelopePos;
 	int16_t val;
@@ -37,32 +42,29 @@ typedef struct _SoundUnitSplit
 {
 	uint8_t increment_frac;
 	uint8_t increment_int;
-	uint8_t  wavetablePos_frac;
-	uint16_t  wavetablePos_int;
+	uint8_t wavetablePos_frac;
+	uint16_t wavetablePos_int;
 	uint8_t envelopeLevel;
 	uint8_t envelopePos;
 	int16_t val;
 	int8_t sampleVal;
 } SoundUnitSplit;
 
-
-typedef union _SoundUnitUnion
-{
+typedef union _SoundUnitUnion {
 	SoundUnit combine;
-	SoundUnitSplit split; 
-}SoundUnitUnion;
-
+	SoundUnitSplit split;
+} SoundUnitUnion;
 
 typedef struct _Synthesizer
 {
-    SoundUnitUnion SoundUnitUnionList[POLY_NUM];
+	SoundUnitUnion SoundUnitUnionList[POLY_NUM];
 	int16_t mixOut;
-    uint8_t lastSoundUnit;
-}Synthesizer;
+	uint8_t lastSoundUnit;
+} Synthesizer;
 
 extern const uint8_t EnvelopeTable[];
 
-extern void SynthInit(Synthesizer* synth);
+extern void SynthInit(Synthesizer *synth);
 
 #ifdef RUN_TEST
 extern void NoteOnC(uint8_t note);
@@ -81,8 +83,13 @@ extern Synthesizer synthForC;
 #endif
 
 extern Synthesizer synthForAsm;
+
+#ifdef __cplusplus
+} //end extern "C"
+#endif
+
 #else
-.extern	EnvelopeTable
+.extern EnvelopeTable
 .extern synthForAsm
 #endif
 

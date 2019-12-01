@@ -6,21 +6,19 @@
 #include "Player.h"
 #include "PeriodTimer.h"
 
-extern unsigned char Score[];
-
 void PlayerProcess(Player *player)
 {
 
     uint8_t temp;
-    
-    if (decayGenTick >= 150)
+
+    if (decayGenTick >= DECAY_TIME_FACTOR)
     {
         GenDecayEnvlopeAsm();
         decayGenTick = 0;
     }
     if (player->status == STATUS_PLAYING)
     {
-        if(PlayNoteTimingCheck(player))
+        if (PlayNoteTimingCheck(player))
         {
             do
             {
@@ -33,7 +31,6 @@ void PlayerProcess(Player *player)
                 else
                 {
                     NoteOnAsm(temp);
-                    //printf("Note On:%02x\n",temp);
                 }
             } while ((temp & 0x80) == 0);
             PlayUpdateNextScoreTick(player);
@@ -41,22 +38,21 @@ void PlayerProcess(Player *player)
     }
 }
 
-void PlayerPlay(Player *player)
+void PlayerPlay(Player *player, uint8_t *score)
 {
     player->lastScoreTick = 0;
-    player->scorePointer = Score;
-    currentTick=0;
+    player->scorePointer = score;
+    currentTick = 0;
     PlayUpdateNextScoreTick(player);
     player->status = STATUS_PLAYING;
-
 }
 
-void PlayerInit(Player *player,Synthesizer *synthesizer)
+void PlayerInit(Player *player, Synthesizer *synthesizer)
 {
     player->status = STATUS_STOP;
     player->lastScoreTick = 0;
-    currentTick=0;
-    player->scorePointer = Score;
+    currentTick = 0;
+    player->scorePointer = NULL;
     player->synthesizerPointer = synthesizer;
     SynthInit(synthesizer);
 }
