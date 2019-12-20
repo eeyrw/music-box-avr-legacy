@@ -73,8 +73,8 @@ OBJDUMP = $(AVRTOOLSDIR)avr-objdump
 CC = $(AVRTOOLSDIR)avr-gcc
 OPTIMIZATION = s
 CSTANDARD = c11
-CFLAGS = -O$(OPTIMIZATION) -g -std=$(CSTANDARD) -DF_CPU=$(F_CPU)UL -DRUN_TEST -mmcu=$(MCU) $(INC_DIR)
-CFLAGS += -Wl,--gc-sections -ffunction-sections -fdata-sections
+CFLAGS = -O$(OPTIMIZATION) -g -std=$(CSTANDARD) -DF_CPU=$(F_CPU)UL -DNORUN_TEST -mmcu=$(MCU) $(INC_DIR)
+CFLAGS += -Wl,--gc-sections,-Map,$(BUILDDIR)/$(TARGET).map -ffunction-sections -fdata-sections
 DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
 REMOVE = rm -f
 
@@ -83,9 +83,10 @@ build: .hex .eeprom .lst .size
 # Virtual target for dependency files
 $(DEPDIR)/%.d: ;
 ifeq ($(OS),Windows_NT)
-	@if not exist $(subst /,\,$(dir $@)) md $(subst /,\,$(dir $@))
+#	if not exist $(subst /,\,$(dir $@)) md $(subst /,\,$(dir $@))
+	mkdir -p $(dir $@)
 else
-	@mkdir -p $(dir $@)
+	mkdir -p $(dir $@)
 endif
 
 # Don't delete dependency files
@@ -102,7 +103,8 @@ endif
 $(OBJDIR)/%.o: %.c
 $(OBJDIR)/%.o: %.c Makefile
 ifeq ($(OS),Windows_NT)
-	@if not exist $(subst /,\,$(dir $@)) md $(subst /,\,$(dir $@))
+#	if not exist $(subst /,\,$(dir $@)) md $(subst /,\,$(dir $@))
+	mkdir -p $(dir $@)	
 else
 	@mkdir -p $(dir $@)
 endif
@@ -114,7 +116,8 @@ endif
 $(OBJDIR)/%.o: %.S
 $(OBJDIR)/%.o: %.S Makefile
 ifeq ($(OS),Windows_NT)
-	@if not exist $(subst /,\,$(dir $@)) md $(subst /,\,$(dir $@))
+#	if not exist $(subst /,\,$(dir $@)) md $(subst /,\,$(dir $@))
+	mkdir -p $(dir $@)	
 else
 	@mkdir -p $(dir $@)
 endif
@@ -139,7 +142,7 @@ endif
 # Rule for creating EEPROM files
 %.eep: %.elf
 	@echo [EEP]: $@
-	@$(OBJCOPY) -j .eeprom --set-section-flags .eeprom=alloc,load \
+	$(OBJCOPY) -j .eeprom --set-section-flags .eeprom=alloc,load \
 	--change-section-lma .eeprom=0 -O $(FORMAT) $< $@
 	
 %.lst: %.elf 
@@ -180,4 +183,5 @@ clean:
 	-$(REMOVE) $(OBJECTS)
 	-$(REMOVE) $(DEPS)
 	-$(REMOVE) $(BUILDTARGET).hex $(BUILDTARGET).elf $(BUILDTARGET).eep
+	-find $(BUILDDIR) -type d -empty -delete
 	@echo "Done cleaning."
